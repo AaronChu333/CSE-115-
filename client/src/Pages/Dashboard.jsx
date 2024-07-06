@@ -33,6 +33,14 @@ function Dashboard() {
         ));
     };
 
+    const deleteProject = (id) => {
+        setProjects(projects.filter(project => project.id !== id));
+    };
+
+    const deleteTask = (id) => {
+        setTasks(tasks.filter(task => task.id !== id));
+    };
+
     return (
         <div className="dashboard-container bg-gray-100 min-h-screen p-8">
             <header className="mb-8">
@@ -55,7 +63,17 @@ function Dashboard() {
                     </form>
                     <ul className="space-y-2">
                         {projects.map(project => (
-                            <li key={project.id} className="bg-gray-100 p-2 rounded">{project.name}</li>
+                            <li key={project.id} className="bg-gray-100 p-2 rounded flex justify-between items-center">
+                            <span>{project.name}</span>
+                            
+                            {/* Button needs to be fixed. It showed up for a second but went away after server restart.*/}
+                            <button 
+                                onClick={() => deleteProject(project.id)}
+                                className='text-red-500 font-bold'
+                            >
+
+                            </button>
+                            </li>
                         ))}
                     </ul>
                 </div>
@@ -75,14 +93,23 @@ function Dashboard() {
                     </form>
                     <ul className="space-y-2">
                         {tasks.map(task => (
-                            <li key={task.id} className="flex items-center bg-gray-100 p-2 rounded">
-                                <input
-                                    type="checkbox"
-                                    checked={task.completed}
-                                    onChange={() => toggleTaskCompletion(task.id)}
-                                    className="mr-2"
-                                />
-                                <span className={task.completed ? 'line-through' : ''}>{task.name}</span>
+                            <li key={task.id} className="flex items-center justify-between bg-gray-100 p-2 rounded">
+                                <div className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={task.completed}
+                                        onChange={() => toggleTaskCompletion(task.id)}
+                                        className="mr-2"
+                                    />
+                                    <span className={task.completed ? 'line-through' : ''}>{task.name}</span>
+                                </div>
+                                {/* Button needs to be fixed. It showed up for a second but went away after server restart.*/}
+                                <button
+                                    onClick={() => deleteTask(task.id)}
+                                    className="text-red-500 font-bold"
+                                >
+                                    
+                                </button>
                             </li>
                         ))}
                     </ul>
