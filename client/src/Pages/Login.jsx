@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-function Login(){
-    const [identifier, createIdentifier] = useState('');
-    const [password, createPassword] = useState('');
+function Login({ onLogin }) {
+    const [identifier, setIdentifier] = useState('');
+    const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
     const handleSubmit = (e) => {
@@ -12,7 +12,8 @@ function Login(){
         axios.post('http://localhost:8080/login', { identifier, password })
             .then(result => {
                 console.log(result);
-                navigate('./Dashboard');
+                onLogin(result.data.userId);
+                navigate('/dashboard');
             })
             .catch(err => console.log(err));
     };
@@ -63,4 +64,4 @@ function Login(){
     );
 }
 
-export default Login
+export default Login;
