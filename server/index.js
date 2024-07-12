@@ -116,3 +116,111 @@ app.get('/tasks/:userId', async (req, res) => {
         res.status(500).send({ error: 'Error fetching tasks' });
     }
 });
+
+// Add a note to a task
+app.post('/tasks/:taskId/notes', async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const { note } = req.body;
+        const task = await Task.findById(taskId);
+        task.notes.push(note);
+        await task.save();
+        res.status(200).send(task);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ error: 'Error adding note to task' });
+    }
+});
+
+// Add a note to a project
+app.post('/projects/:projectId/notes', async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const { note } = req.body;
+        const project = await Project.findById(projectId);
+        project.notes.push(note);
+        await project.save();
+        res.status(200).send(project);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ error: 'Error adding note to project' });
+    }
+});
+
+// Rename a project
+app.put('/projects/:projectId', async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const { userId, newName } = req.body;
+
+        const project = await Project.findOneAndUpdate(
+            { _id: projectId, userId },
+            { name: newName },
+            { new: true }
+        );
+
+        if (!project) {
+            return res.status(404).send({ error: 'Project not found or you do not have permission to rename this project' });
+        }
+
+        res.status(200).send(project);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ error: 'Error renaming project' });
+    }
+});
+
+// Rename a task
+app.put('/tasks/:taskId', async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const { userId, newName } = req.body;
+
+        const task = await Task.findOneAndUpdate(
+            { _id: taskId, userId },
+            { name: newName },
+            { new: true }
+        );
+
+        if (!task) {
+            return res.status(404).send({ error: 'Task not found or you do not have permission to rename this task' });
+        }
+
+        res.status(200).send(task);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ error: 'Error renaming task' });
+    }
+});
+
+// Delete a project
+app.delete('/projects/:projectId', async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const deletedProject = await Project.findByIdAndDelete(projectId);
+        if (!deletedProject) {
+            return res.status(404).send({ error: 'Project not found' });
+        }
+        res.status(200).send({ message: 'Project deleted successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ error: 'Error deleting project' });
+    }
+});
+
+// Delete a task
+app.delete('/tasks/:taskId', async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const deletedTask = await Task.findByIdAndDelete(taskId);
+        if (!deletedTask) {
+            return res.status(404).send({ error: 'Task not found' });
+        }
+        res.status(200).send({ message: 'Task deleted successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ error: 'Error deleting task' });
+    }
+});
+
+export default app;
