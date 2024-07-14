@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 function Dashboard() {
     // Seperate states for projects and tasks
@@ -69,9 +71,9 @@ function Dashboard() {
                             {/* Button needs to be fixed. It showed up for a second but went away after server restart.*/}
                             <button 
                                 onClick={() => deleteProject(project.id)}
-                                className='text-red-500 font-bold'
+                                className='text-red-500 font-bold px-2 py-1 rounded hover:bg-red-100'
                             >
-
+                                <FontAwesomeIcon icon={faTrash} />
                             </button>
                             </li>
                         ))}
@@ -106,9 +108,9 @@ function Dashboard() {
                                 {/* Button needs to be fixed. It showed up for a second but went away after server restart.*/}
                                 <button
                                     onClick={() => deleteTask(task.id)}
-                                    className="text-red-500 font-bold"
+                                    className="text-red-500 font-bold px-2 py-1 rounded hover:bg-red-100"
                                 >
-                                    
+                                    <FontAwesomeIcon icon={faTrash} />
                                 </button>
                             </li>
                         ))}
