@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import NotesSidebar from './NotesSidebar';
 
 function Dashboard() {
     // Seperate states for projects and tasks
@@ -10,6 +11,11 @@ function Dashboard() {
     // States for new item creation
     const [newProject, setNewProject] = useState('');
     const [newTask, setNewTask] = useState('');
+
+    //For notes sidebar
+    const [notes, setNotes] = useState({});
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // This function is to create new projects
     const addProject = (e) => {
@@ -43,6 +49,24 @@ function Dashboard() {
         setTasks(tasks.filter(task => task.id !== id));
     };
 
+    const openNotesSidebar = (item) => {
+        setSelectedItem(item);
+        setIsSidebarOpen(true);
+    };
+
+    const closeNotesSidebar = () => {
+        setSelectedItem(null);
+        setIsSidebarOpen(false);
+    };
+
+    const addNote = (note) => {
+        if (selectedItem) {
+            setNotes(prevNotes => ({
+                ...prevNotes, [selectedItem.id]: [...(prevNotes[selectedItem.id] || []), note]
+            }));
+        }
+    };
+
     return (
         <div className="dashboard-container bg-gray-100 min-h-screen p-8">
             <header className="mb-8">
@@ -68,7 +92,12 @@ function Dashboard() {
                             <li key={project.id} className="bg-gray-100 p-2 rounded flex justify-between items-center">
                             <span>{project.name}</span>
                             
-                            {/* Button needs to be fixed. It showed up for a second but went away after server restart.*/}
+                            <button
+                                onClick={() => openNotesSidebar(project)}
+                                className="bg-blue-500 text-white px-2 py-1 rounded mr-2"
+                            >
+                                +Notes
+                            </button>
                             <button 
                                 onClick={() => deleteProject(project.id)}
                                 className='text-red-500 font-bold px-2 py-1 rounded hover:bg-red-100'
@@ -105,7 +134,12 @@ function Dashboard() {
                                     />
                                     <span className={task.completed ? 'line-through' : ''}>{task.name}</span>
                                 </div>
-                                {/* Button needs to be fixed. It showed up for a second but went away after server restart.*/}
+                                <button
+                                    onClick={() => openNotesSidebar(task)}
+                                    className="bg-blue-500 text-white px-2 py-1 rounded mr-2"
+                                >
+                                    +Notes
+                                </button>
                                 <button
                                     onClick={() => deleteTask(task.id)}
                                     className="text-red-500 font-bold px-2 py-1 rounded hover:bg-red-100"
@@ -117,6 +151,7 @@ function Dashboard() {
                     </ul>
                 </div>
             </div>
+
         </div>
     );
 }
