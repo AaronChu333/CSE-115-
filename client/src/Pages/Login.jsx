@@ -12,7 +12,8 @@ function Login(){
         axios.post('http://localhost:8080/login', { identifier, password })
             .then(result => {
                 console.log(result);
-                navigate('./Dashboard');
+                onLogin(result.data.userId);
+                navigate('/dashboard');
             })
             .catch(err => console.log(err));
     };
@@ -63,4 +64,4 @@ function Login(){
     );
 }
 
-export default Login
+export default Login;
