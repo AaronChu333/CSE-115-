@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-function Login({ onLogin }) {
-    const [identifier, setIdentifier] = useState('');
-    const [password, setPassword] = useState('');
+function Login(){
+    const [identifier, createIdentifier] = useState('');
+    const [password, createPassword] = useState('');
     const navigate = useNavigate();
 
     const handleSubmit = (e) => {

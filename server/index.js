@@ -39,9 +39,9 @@ app.get('/', (req, res) => {
 
 app.post('/register', async (req, res, next) => {
     try {
-        const { username, email, password } = req.body; // Include username
-        const hashed = bcryptjs.hashSync(password, 10);
-        const newUser = new User({ username, email, password: hashed }); // Include username
+        const { username, email, password } = req.body; 
+        const hashedPassword = bcryptjs.hashSync(password, 10);
+        const newUser = new User({ username, email, password: hashedPassword }); 
         await newUser.save();
         res.status(201).send({ message: 'User registered successfully' });
     } catch (err) {
