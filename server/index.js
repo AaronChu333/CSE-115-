@@ -2,10 +2,14 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import User from './models/user.js';
+import User from './models/User.js';
 import bcryptjs from 'bcryptjs';
+import passport from './config/passport.js';
+import session from 'express-session';
+import flash from 'connect-flash';
 import Project from './models/project.js';
 import Task from './models/task.js';
+
 
 dotenv.config();
 
@@ -33,6 +37,17 @@ mongoose.connect(MONGO)
 app.use(cors()); // Enable CORS
 app.use(express.json());
 
+// Session and Passport configuration
+app.use(session({
+    secret: 'your_secret_key', // Replace with your own secret key
+    resave: false,
+    saveUninitialized: false,
+}));
+
+app.use(flash());
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.get('/', (req, res) => {
     res.send('Hello, World!');
 });
@@ -44,8 +59,8 @@ app.post('/register', async (req, res, next) => {
         const newUser = new User({ username, email, password: hashedPassword }); 
         await newUser.save();
         res.status(201).send({ message: 'User registered successfully' });
-    } catch (err) {
-        console.error(err);
+    } catch (error) {
+        console.error(error);
         res.status(500).send({ error: 'Error registering user' });
         next(err);
     }
@@ -130,6 +145,26 @@ app.post('/tasks/:taskId/notes', async (req, res) => {
         console.error(err);
         res.status(500).send({ error: 'Error adding note to task' });
     }
+});
+
+// Authentication routes
+app.post('/login', passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/login',
+    failureFlash: true,
+}));
+
+app.get('/login', (req, res) => {
+    res.send('Login Page');
+});
+
+app.get('/logout', (req, res, next) => {
+    req.logout((err) => {
+        if (err) {
+            return next(err);
+        }
+        res.redirect('/');
+    });
 });
 
 // Add a note to a project
@@ -224,3 +259,4 @@ app.delete('/tasks/:taskId', async (req, res) => {
 });
 
 export default app;
+
