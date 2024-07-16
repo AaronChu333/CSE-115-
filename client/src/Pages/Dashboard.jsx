@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import NotesSidebar from './NotesSidebar';
@@ -55,9 +55,15 @@ function Dashboard() {
     };
 
     const closeNotesSidebar = () => {
+        console.log('Closing sidebar');
         setSelectedItem(null);
         setIsSidebarOpen(false);
+        console.log('isSidebarOpen set to: ', false);
     };
+
+    useEffect(() => {
+        console.log('isSidebarOpen changed to: ', isSidebarOpen);
+    }, [isSidebarOpen]);
 
     const addNote = (note) => {
         if (selectedItem) {
@@ -152,6 +158,14 @@ function Dashboard() {
                 </div>
             </div>
 
+            {isSidebarOpen && selectedItem && (
+                <NotesSidebar
+                    item={selectedItem}
+                    notes={notes[selectedItem.id] || []}
+                    onAddNote={addNote}
+                    onClose={closeNotesSidebar}
+                />
+            )}
         </div>
     );
 }

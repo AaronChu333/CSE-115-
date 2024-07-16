@@ -1,6 +1,27 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 function NotesSidebar({ item, notes, onAddNote, onClose }) {
+    console.log('onClose in sidebar:', onClose);
+
+    console.log('NotesSidebar rendered');
+
+    useEffect(() => {
+        return () => {
+            console.log('NotesSidebar unmounted');
+        };
+    }, []);
+
+    const handleClose = () => {
+        console.log('Close button clicked');
+        if (typeof onClose === 'function') {
+            onClose();
+        }
+
+        else {
+            console.error('onClose is not a function: ', onClose);
+        }
+    };
+
     const [newNote, setNewNote] = useState('');
 
     const handleSubmit = (e) => {
