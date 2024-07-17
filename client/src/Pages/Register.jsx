@@ -7,10 +7,18 @@ function Signup() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
+    const [error, setError] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.post('http://localhost:8080/register', { username, email, password })
+        setError('');
+
+        if (!username || !email || !password) {
+            setError('All input fields are required');
+            return;_
+        };
+
+        axios.post('http://192.168.1.107:8080/register', { username, email, password })
             .then(result => {
                 console.log(result);
                 navigate('/login');
@@ -19,7 +27,7 @@ function Signup() {
     };
 
     return (
-        <div className="flex justify-center items-center bg-gray-800 h-screen space-y-4 text-black">
+        <div className="flex justify-center items-center bg-gray-800 h-screen space-y-4 text-black overflow-hidden">
             <div className="bg-white px-80 py-96 rounded">
                 <h2 className="text-center font-bold text-4xl mb-10">Register</h2>
                 <form onSubmit={handleSubmit}>
@@ -57,18 +65,15 @@ function Signup() {
                             className="form-control rounded-full text-black font-normal text-2xl outline-none bg-[#eaeaea] py-3 text-center"
                             onChange={(e) => setPassword(e.target.value)}
                         />
-                    </div>
-                    <button type="submit" className="btn btn-primary">
-                        <div className="text-center ml-15">
-                            <p className="border-2 border-black rounded-full bg-black px-3 py-1 text-white">Register</p>
+                        <button type="submit" className="btn btn-primary">
+                        <div className="text-center ml-15 py-3">
+                            <p className="border-1 border-black rounded-full bg-black px-5 py-3 text-white">Register</p>
                         </div>
-                    </button>
+                        </button>
+                    </div>
                 </form>
                 <div className="mt-3 text-center">
-                    <p>Already have an account?</p>
-                    <Link to="/login" className="btn btn-primary">
-                        <p className="border-2 border-black rounded-full bg-black text-white py-3">Login</p>
-                    </Link>
+                    <p>Already have an account? <a href='/login' className='text-blue-500'>Sign in here.</a></p>
                 </div>
             </div>
         </div>
