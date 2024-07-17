@@ -19,11 +19,14 @@ const MONGO = process.env.MONGO;
 
 // enabling cors
 const corsOptions = {
-    origin: 'http://localhost:5173/',
+    origin: 'http://localhost:5173',
+    credentials: true,
     optionSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
+
+app.options('*', cors(corsOptions))
 
 if (!MONGO) {
     console.error("MongoDB connection string (MONGO) is missing in environment variables");
@@ -120,15 +123,23 @@ app.get('/projects/:userId', async (req, res) => {
 // Create a task
 app.post('/tasks', async (req, res) => {
     try {
-        const { userId, name } = req.body;
-        const task = new Task({ userId, name });
-        await task.save();
-        res.status(201).send(task);
+      const { userId, projectId, name } = req.body;
+      console.log('Received task creation request:', { userId, projectId, name }); // Add this line for debugging
+  
+      if (!userId || !projectId || !name) {
+        return res.status(400).send({ error: 'Missing required fields' });
+      }
+  
+      const task = new Task({ userId, projectId, name });
+      await task.save();
+      
+      console.log('Task created:', task); // Add this line for debugging
+      res.status(201).send(task);
     } catch (err) {
-        console.error(err);
-        res.status(500).send({ error: 'Error creating task' });
+      console.error('Error creating task:', err);
+      res.status(500).send({ error: 'Error creating task', details: err.message });
     }
-});
+  });
 
 // Get tasks for a user
 app.get('/tasks/:userId', async (req, res) => {
@@ -235,6 +246,26 @@ app.put('/tasks/:taskId', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).send({ error: 'Error renaming task' });
+    }
+});
+
+// Toggle task completion
+app.put('/tasks/:taskId/toggle', async (req, res) => {
+    try {
+      const { taskId } = req.params;
+      const task = await Task.findById(taskId);
+      
+      if (!task) {
+        return res.status(404).send({ error: 'Task not found' });
+      }
+      
+      task.completed = !task.completed;
+      await task.save();
+      
+      res.status(200).send(task);
+    } catch (err) {
+      console.error('Error toggling task completion:', err);
+      res.status(500).send({ error: 'Error toggling task completion' });
     }
 });
 

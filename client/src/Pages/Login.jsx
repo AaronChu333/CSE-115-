@@ -17,6 +17,22 @@ function Login() {
             .catch(err => console.log(err));
     };
 
+    axios.post('http://localhost:8080/login', { identifier, password })
+    .then(result => {
+        console.log('Login response:', result.data); // Add this line to debug
+        if (result.data && result.data.userId) {
+            localStorage.setItem('userId', result.data.userId);
+            navigate('/dashboard');
+        } else {
+            console.error('Login successful but no userId received');
+            // Handle this error case appropriately
+        }
+    })
+    .catch(err => {
+        console.error('Login error:', err);
+        // Handle login error (show message to user)
+    });
+
     return (
         <div className="flex justify-center items-center bg-gray-800 h-screen space-y-4 text-black overflow-hidden">
             <div className="bg-white px-80 py-96 rounded w-50">

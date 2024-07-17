@@ -1,21 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faFolder, faTasks } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faFolder, faTasks, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 
-function Dashboard({ userId }) {
+function Dashboard() {
   const [projects, setProjects] = useState([]);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectNote, setNewProjectNote] = useState('');
   const [selectedProject, setSelectedProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [newTaskName, setNewTaskName] = useState('');
+  const [taskNotes, setTaskNotes] = useState({});
+  const [expandedTasks, setExpandedTasks] = useState({});
   
   const projectNoteRef = useRef(null);
 
+  axios.defaults.withCredentials = true;
+
   useEffect(() => {
-    fetchProjects();
-  }, [userId]);
+    const storedUserId = localStorage.getItem('userId');
+    console.log('Stored userId:', storedUserId);
+    if (storedUserId) {
+        fetchProjects(storedUserId);
+    } else {
+        console.error('No userId found in localStorage');
+    }
+  }, []);
 
   useEffect(() => {
     if (projectNoteRef.current) {
@@ -24,29 +34,52 @@ function Dashboard({ userId }) {
     }
   }, [newProjectNote]);
 
-  const fetchProjects = () => {
+  const fetchProjects = (userId) => {
+    console.log('Fetching projects for userId:', userId);
     axios.get(`http://localhost:8080/projects/${userId}`)
-      .then(response => {
-        setProjects(response.data);
-      })
-      .catch(error => {
-        console.error('Error fetching projects:', error);
-      });
+        .then(response => {
+            setProjects(response.data);
+        })
+        .catch(error => {
+            console.error('Error fetching projects:', error);
+        });
   };
 
   const fetchTasks = (projectId) => {
     axios.get(`http://localhost:8080/tasks/${projectId}`)
       .then(response => {
         setTasks(response.data);
+        response.data.forEach(task => {
+          fetchTaskNotes(task._id);
+        });
       })
       .catch(error => {
         console.error('Error fetching tasks:', error);
       });
   };
 
+  const fetchTaskNotes = (taskId) => {
+    axios.get(`http://localhost:8080/tasks/${taskId}/notes`)
+      .then(response => {
+        setTaskNotes(prev => ({
+          ...prev,
+          [taskId]: response.data
+        }));
+      })
+      .catch(error => {
+        console.error('Error fetching task notes:', error);
+      });
+  };
+
   const handleCreateProject = (e) => {
     e.preventDefault();
     if (!newProjectName) return;
+
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      console.error('No userId found in localStorage');
+      return;
+    }
 
     axios.post('http://localhost:8080/projects', { userId, name: newProjectName, note: newProjectNote })
       .then(response => {
@@ -61,15 +94,31 @@ function Dashboard({ userId }) {
 
   const handleCreateTask = (e) => {
     e.preventDefault();
-    if (!newTaskName || !selectedProject) return;
-
-    axios.post('http://localhost:8080/tasks', { projectId: selectedProject._id, name: newTaskName })
+    if (!newTaskName || !selectedProject) {
+      console.error('Task name or selected project is missing');
+      return;
+    }
+  
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      console.error('No userId found in localStorage');
+      return;
+    }
+  
+    console.log('Creating task:', { projectId: selectedProject._id, name: newTaskName, userId });
+  
+    axios.post('http://localhost:8080/tasks', { 
+      projectId: selectedProject._id, 
+      name: newTaskName,
+      userId
+    })
       .then(response => {
+        console.log('Task created:', response.data);
         setTasks([...tasks, response.data]);
         setNewTaskName('');
       })
       .catch(error => {
-        console.error('Error creating task:', error);
+        console.error('Error creating task:', error.response ? error.response.data : error.message);
       });
   };
 
@@ -101,6 +150,44 @@ function Dashboard({ userId }) {
       .catch(error => {
         console.error('Error deleting task:', error);
       });
+  };
+
+  const toggleTaskCompletion = (taskId) => {
+    axios.put(`http://localhost:8080/tasks/${taskId}/toggle`)
+      .then(response => {
+        setTasks(tasks.map(task => 
+          task._id === taskId ? response.data : task
+        ));
+      })
+      .catch(error => {
+        console.error('Error toggling task completion:', error);
+      });
+  };
+
+  const toggleTaskNotes = (e, taskId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpandedTasks(prev => ({
+      ...prev,
+      [taskId]: !prev[taskId]
+    }));
+  };
+
+  const addNoteToTask = (taskId) => {
+    const note = prompt("Enter a note for this task:");
+    if (note) {
+      axios.post(`http://localhost:8080/tasks/${taskId}/notes`, { note })
+        .then(response => {
+          setTaskNotes(prev => ({
+            ...prev,
+            [taskId]: [...(prev[taskId] || []), note]
+          }));
+          console.log('Note added successfully');
+        })
+        .catch(error => {
+          console.error('Error adding note:', error);
+        });
+    }
   };
 
   return (
@@ -185,14 +272,58 @@ function Dashboard({ userId }) {
             </form>
             <ul className="space-y-2">
               {tasks.map((task) => (
-                <li key={task._id} className="bg-gray-100 p-2 rounded flex justify-between items-center">
-                  <span>{task.name}</span>
-                  <button
-                    onClick={() => deleteTask(task._id)}
-                    className="text-red-500 font-bold px-2 py-1 rounded hover:bg-red-100"
-                  >
-                    <FontAwesomeIcon icon={faTrash} />
-                  </button>
+                <li key={task._id} className="bg-gray-100 p-2 rounded">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={task.completed}
+                        onChange={() => toggleTaskCompletion(task._id)}
+                        className="mr-2"
+                      />
+                      <span className={task.completed ? 'line-through text-gray-500' : ''}>
+                        {task.name}
+                      </span>
+                    </div>
+                    <div>
+                      <button
+                        onClick={() => addNoteToTask(task._id)}
+                        className="bg-blue-500 text-white px-2 py-1 rounded mr-2 text-xs"
+                      >
+                        +Notes
+                      </button>
+                      <button
+                        onClick={(e) => toggleTaskNotes(e, task._id)}
+                        className="bg-green-500 text-white px-2 py-1 rounded mr-2 text-xs"
+                      >
+                        {expandedTasks[task._id] ? (
+                          <FontAwesomeIcon icon={faChevronUp} />
+                        ) : (
+                          <FontAwesomeIcon icon={faChevronDown} />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => deleteTask(task._id)}
+                        className="text-red-500 font-bold px-2 py-1 rounded hover:bg-red-100"
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                    </div>
+                  </div>
+                  {expandedTasks[task._id] && (
+                    <div className="mt-2 pl-6 bg-white p-2 rounded shadow">
+                      <h4 className="font-semibold">Notes:</h4>
+                      {taskNotes[task._id] && taskNotes[task._id].length > 0 ? (
+                        <ul className="list-disc pl-4">
+                          {taskNotes[task._id].map((note, index) => (
+                            <li key={index} className="text-sm text-gray-600">{note}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-gray-500">No notes yet.</p>
+                      )}
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
