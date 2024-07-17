@@ -14,6 +14,13 @@ function App() {
         <Route path='/' element={<Login />}></Route>
         <Route path='/login' element={<Login />}></Route>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route
+          path="/dashboard"
+          element={
+            <Dashboard userId={localStorage.getItem('userId')} />
+          }
+        />
+          
       </Routes>
     </BrowserRouter>
   );
