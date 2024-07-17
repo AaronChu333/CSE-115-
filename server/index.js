@@ -17,6 +17,14 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const MONGO = process.env.MONGO;
 
+// enabling cors
+const corsOptions = {
+    origin: 'http://192.168.1.107:5173',
+    optionSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+
 if (!MONGO) {
     console.error("MongoDB connection string (MONGO) is missing in environment variables");
     process.exit(1); // Exit the process with failure
@@ -34,7 +42,6 @@ mongoose.connect(MONGO)
         process.exit(1); // Exit the process with failure
     });
 
-app.use(cors()); // Enable CORS
 app.use(express.json());
 
 // Session and Passport configuration
@@ -52,6 +59,7 @@ app.get('/', (req, res) => {
     res.send('Hello, World!');
 });
 
+//Registering
 app.post('/register', async (req, res, next) => {
     try {
         const { username, email, password } = req.body; 
@@ -66,6 +74,8 @@ app.post('/register', async (req, res, next) => {
     }
 });
 
+
+//Logging in
 app.post('/login', async (req, res) => {
     try {
         const { identifier, password } = req.body;
