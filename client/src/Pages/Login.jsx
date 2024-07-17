@@ -9,7 +9,7 @@ function Login() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.post('http://192.168.1.107:8080/login', { identifier, password })
+        axios.post('/api/login', { identifier, password })
             .then(result => {
                 console.log(result);
                 navigate('/dashboard');
@@ -45,18 +45,15 @@ function Login() {
                             className="form-control rounded-full text-black font-normal text-2xl outline-none bg-[#eaeaea] py-3 text-center"
                             onChange={(e) => setPassword(e.target.value)}
                         />
-                    </div>
                     <button type="submit" className="btn btn-primary">
-                        <div className="text-center ml-15">
-                            <p className="border-2 border-black rounded-full bg-black px-5 py-1 text-white">Login</p>
+                        <div className="text-center ml-15 py-3">
+                            <p className="border-1 border-black rounded-full bg-black px-4 py-3 text-white">Login</p>
                         </div>
-                    </button>
+                        </button>
+                        </div>
                 </form>
                 <div className="mt-3 text-center">
-                    <p>Don't have an account?</p>
-                    <Link to="/register" className="btn btn-secondary">
-                        <p className="border-2 border-black rounded-full bg-black text-white py-3">Register</p>
-                    </Link>
+                    <p>Don't have an account? <a href='/register' className='text-blue-500'>Register here.</a></p>
                 </div>
             </div>
         </div>
@@ -64,48 +61,3 @@ function Login() {
 }
 
 export default Login;
-
-/*
-        <div className="login-container d-flex justify-content-center align-items-center vh-100 bg-secondary">
-            <div className="login-form bg-white p-4 rounded">
-                <h2>Login</h2>
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                        <label htmlFor="identifier" className="form-label">
-                            <strong>Username or Email</strong>
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="Enter Username or Email"
-                            autoComplete="off"
-                            name="identifier"
-                            className="form-control"
-                            onChange={(e) => setIdentifier(e.target.value)}
-                        />
-                    </div>
-                    <div className="mb-3">
-                        <label htmlFor="password" className="form-label">
-                            <strong>Password</strong>
-                        </label>
-                        <input
-                            type="password"
-                            placeholder="Enter Password"
-                            autoComplete="off"
-                            name="password"
-                            className="form-control"
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
-                    </div>
-                    <button type="submit" className="btn btn-primary w-100">
-                        Login
-                    </button>
-                </form>
-                <div className="mt-3 text-center">
-                    <p>Don't have an account?</p>
-                    <Link to="/register" className="btn btn-secondary">
-                        Register
-                    </Link>
-                </div>
-            </div>
-        </div>
-*/
