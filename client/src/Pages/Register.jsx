@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -7,24 +7,42 @@ function Signup() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
-    const [error, setError] = useState('');
+    const [message, setMessage] = useState('');
+    const [messageType, setMessageType] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        setError('');
+        setMessage('');
+        setMessageType('');
 
         if (!username || !email || !password) {
-            setError('All input fields are required');
-            return;_
+            setMessage('All input fields are required');
+            setMessageType('Error');
+            return;
         };
 
-        axios.post('http://192.168.1.107:8080/register', { username, email, password })
+        axios.post('/api/register', { username, email, password })
             .then(result => {
                 console.log(result);
-                navigate('/login');
+                setMessage('Account created successfully!');
+                setMessageType('success');
+                setTimeout(() => {
+                    navigate('/login');
+                }, 2000);
             })
             .catch(err => console.log(err));
+            setMessage('Registration failed. Please try again.');
+            setMessageType('error'); 
     };
+
+    useEffect(() => {
+        if (message) {
+            const timer = setTimeout(() => {
+                setMessage('');
+            }, 2000) //2 second for message
+            return () => clearTimeout(timer);
+        }
+    }, [message]);
 
     return (
         <div className="flex justify-center items-center bg-gray-800 h-screen space-y-4 text-black overflow-hidden">

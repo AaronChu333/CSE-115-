@@ -19,7 +19,7 @@ const MONGO = process.env.MONGO;
 
 // enabling cors
 const corsOptions = {
-    origin: 'http://192.168.1.107:5173',
+    origin: 'http://localhost:5173/',
     optionSuccessStatus: 200
 };
 
