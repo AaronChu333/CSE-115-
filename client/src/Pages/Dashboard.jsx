@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faFolder, faTasks, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
@@ -12,6 +13,7 @@ function Dashboard() {
   const [newTaskName, setNewTaskName] = useState('');
   const [taskNotes, setTaskNotes] = useState({});
   const [expandedTasks, setExpandedTasks] = useState({});
+  const navigate = useNavigate();
   
   const projectNoteRef = useRef(null);
 
@@ -189,10 +191,18 @@ function Dashboard() {
         });
     }
   };
+  const handleLogout = (e) => {
+    e.preventDefault();
+    localStorage.removeItem('userId');
+    navigate('/login');
+  }
 
   return (
     <div className="dashboard-container bg-gray-100 min-h-screen p-8">
       <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      <button 
+      onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded absolute top-4 right-4">Logout
+      </button>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4">Projects</h2>
