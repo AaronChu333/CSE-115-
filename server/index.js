@@ -82,7 +82,13 @@ app.post('/register', async (req, res, next) => {
 app.post('/login', async (req, res) => {
     try {
         const { identifier, password } = req.body;
-        const user = await User.findOne({ email: identifier });
+        const user = await User.findOne({
+            $or: [
+              { email: identifier },
+              { username: identifier }
+            ]
+          });
+          
         
         if (!user || !bcryptjs.compareSync(password, user.password)) {
             return res.status(401).send({ error: 'Invalid credentials' });
