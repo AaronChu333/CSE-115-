@@ -9,6 +9,7 @@ import session from 'express-session';
 import flash from 'connect-flash';
 import Project from './models/project.js';
 import Task from './models/task.js';
+import Invitation from './models/Invitations.js';
 
 
 dotenv.config();
@@ -104,42 +105,64 @@ app.post('/login', async (req, res) => {
 // Create a project
 app.post('/projects', async (req, res) => {
     try {
-        const { userId, name } = req.body;
-        const newProject = new Project({ userId, name });
-        await newProject.save();
-        res.status(201).send(newProject);
+      const { userId, name } = req.body;
+  
+      // Create a new project
+      const newProject = new Project({ userId, name });
+      await newProject.save();
+  
+      // Add the new project's ID to the user's projects array
+      await User.findByIdAndUpdate(
+        userId,
+        { $push: { projects: newProject._id } },
+        { new: true, useFindAndModify: false }
+      );
+  
+      res.status(201).send(newProject);
     } catch (err) {
-        console.error(err);
-        res.status(500).send({ error: 'Error creating project' });
+      console.error(err);
+      res.status(500).send({ error: 'Error creating project' });
     }
-});
+  });
 
 // Get projects for a user
 app.get('/projects/:userId', async (req, res) => {
     try {
-        const { userId } = req.params;
-        const projects = await Project.find({ userId });
-        res.status(200).send(projects);
+      const { userId } = req.params;
+      const user = await User.findById(userId).populate('projects');
+      if (!user) {
+        return res.status(404).send({ error: 'User not found' });
+      }
+      res.status(200).send(user.projects);
     } catch (err) {
-        console.error(err);
-        res.status(500).send({ error: 'Error fetching projects' });
+      console.error(err);
+      res.status(500).send({ error: 'Error fetching projects' });
     }
-});
+  });
 
 // Create a task
 app.post('/tasks', async (req, res) => {
     try {
       const { userId, projectId, name } = req.body;
-      console.log('Received task creation request:', { userId, projectId, name }); // Add this line for debugging
+      console.log('Received task creation request:', { userId, projectId, name }); // Debugging line
   
+      // Check for missing required fields
       if (!userId || !projectId || !name) {
         return res.status(400).send({ error: 'Missing required fields' });
       }
   
+      // Create a new task
       const task = new Task({ userId, projectId, name });
       await task.save();
-      
-      console.log('Task created:', task); // Add this line for debugging
+  
+      // Add the new task's ID to the project's tasks array
+      await Project.findByIdAndUpdate(
+        projectId,
+        { $push: { task: task._id } },
+        { new: true, useFindAndModify: false }
+      );
+  
+      console.log('Task created:', task); // Debugging line
       res.status(201).send(task);
     } catch (err) {
       console.error('Error creating task:', err);
@@ -147,11 +170,14 @@ app.post('/tasks', async (req, res) => {
     }
   });
 
-// Get tasks for a user
-app.get('/tasks/:userId', async (req, res) => {
+// Get tasksId for a project
+app.get('/tasks/:projectId', async (req, res) => {
     try {
-        const { userId } = req.params;
-        const tasks = await Task.find({ userId });
+        const { projectId } = req.params;
+        const tasks = await Task.find({ projectId });
+        if (!tasks) {
+            return res.status(404).send({ error: 'No tasks found for this project' });
+        }
         res.status(200).send(tasks);
     } catch (err) {
         console.error(err);
@@ -159,20 +185,29 @@ app.get('/tasks/:userId', async (req, res) => {
     }
 });
 
-// Add a note to a task
-app.post('/tasks/:taskId/notes', async (req, res) => {
+// Get tasks from id
+  app.get('/tasks/id/:tasksId', async (req, res) => {
     try {
-        const { taskId } = req.params;
-        const { note } = req.body;
-        const task = await Task.findById(taskId);
-        task.notes.push(note);
-        await task.save();
-        res.status(200).send(task);
-    } catch (err) {
+        const{ taskId } = req.params;
+        const task = await Task.findOne({ taskId });
+        res.status(200).send(task);  
+    } catch (error) {
         console.error(err);
-        res.status(500).send({ error: 'Error adding note to task' });
+        res.status(500).send({ error: 'Error finding task' });
     }
-});
+  })
+
+  // Get tasks notes
+  app.get('/tasks/notes/:tasksId', async (req, res) => {
+    try {
+        const{ taskId } = req.params;
+        const task = await Task.findOne({ taskId });
+        res.status(200).send(task);
+    } catch (error) {
+        console.error(err);
+        res.status(500).send({ error: 'Error finding task' });
+    }
+  })
 
 // Authentication routes
 app.post('/login', passport.authenticate('local', {
@@ -305,5 +340,5 @@ app.delete('/tasks/:taskId', async (req, res) => {
     }
 });
 
-export default app;
 
+export default app;
