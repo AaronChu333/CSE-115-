@@ -1,0 +1,17 @@
+{
+    "name": "project-manager",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+      "start": "node index.js"
+    },
+    "dependencies": {
+      "express": "^4.17.1",
+      "mongoose": "^5.11.15",
+      "dotenv": "^8.2.0",
+      "cors": "^2.8.5",
+      "bcryptjs": "^2.4.3"
+    }
+  }
+  
