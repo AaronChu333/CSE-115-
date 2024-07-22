@@ -108,15 +108,16 @@ app.post('/projects', async (req, res) => {
     }
 });
 
-// Get projects for a user
+// Fetch projects
 app.get('/projects/:userId', async (req, res) => {
     try {
-        const { userId } = req.params;
-        const projects = await Project.find({ userId });
-        res.status(200).send(projects);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send({ error: 'Error fetching projects' });
+      const { userId } = req.params;
+      const user = await User.findById(userId).populate('projectOrder');
+      const projects = user.projectOrder;
+      res.status(200).send(projects);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      res.status(500).send({ error: 'Error fetching projects' });
     }
 });
 
@@ -141,15 +142,16 @@ app.post('/tasks', async (req, res) => {
     }
   });
 
-// Get tasks for a user
-app.get('/tasks/:userId', async (req, res) => {
+// Fetch tasks
+app.get('/tasks/:projectId', async (req, res) => {
     try {
-        const { userId } = req.params;
-        const tasks = await Task.find({ userId });
-        res.status(200).send(tasks);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send({ error: 'Error fetching tasks' });
+      const { projectId } = req.params;
+      const project = await Project.findById(projectId).populate('taskOrder');
+      const tasks = project.taskOrder;
+      res.status(200).send(tasks);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      res.status(500).send({ error: 'Error fetching tasks' });
     }
 });
 
@@ -296,6 +298,36 @@ app.delete('/tasks/:taskId', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).send({ error: 'Error deleting task' });
+    }
+});
+
+// Update project order
+app.put('/users/:userId/project-order', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { projectOrder } = req.body;
+      
+      await User.findByIdAndUpdate(userId, { projectOrder });
+      
+      res.status(200).send({ message: 'Project order updated successfully' });
+    } catch (error) {
+      console.error('Error updating project order:', error);
+      res.status(500).send({ error: 'Error updating project order' });
+    }
+});
+
+// Update task order
+app.put('/projects/:projectId/task-order', async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const { taskOrder } = req.body;
+      
+      await Project.findByIdAndUpdate(projectId, { taskOrder });
+      
+      res.status(200).send({ message: 'Task order updated successfully' });
+    } catch (error) {
+      console.error('Error updating task order:', error);
+      res.status(500).send({ error: 'Error updating task order' });
     }
 });
 
