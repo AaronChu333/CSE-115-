@@ -1,10 +1,15 @@
-import mongoose from 'mongoose';
+import mongoose, {Schema} from 'mongoose';
 
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true},
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    projectOrder: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Project' }] 
+    projects: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Project',
+        }
+    ]
 });
 
 const User = mongoose.model('User', userSchema);
