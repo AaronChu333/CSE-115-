@@ -66,15 +66,20 @@ app.get('/', (req, res) => {
 //Registering
 app.post('/register', async (req, res, next) => {
     try {
-        const { username, email, password } = req.body; 
+        const { username, email, password } = req.body;
         const hashedPassword = bcryptjs.hashSync(password, 10);
-        const newUser = new User({ username, email, password: hashedPassword }); 
+        const newUser = new User({ username, email, password: hashedPassword });
+
         await newUser.save();
         res.status(201).send({ message: 'User registered successfully' });
     } catch (error) {
-        console.error(error);
-        res.status(500).send({ error: 'Error registering user' });
-        next(err);
+        if (error.code === 11000 && error.keyPattern.email) {
+            res.status(400).send({ message: 'Email already in use' });
+        } else {
+            console.error(error);
+            res.status(500).send({ error: 'Error registering user' });
+        }
+        next(error);
     }
 });
 
@@ -125,7 +130,7 @@ app.post('/projects', async (req, res) => {
     }
   });
 
-// Get projects for a user
+// Fetch projects
 app.get('/projects/:userId', async (req, res) => {
     try {
       const { userId } = req.params;
@@ -340,5 +345,34 @@ app.delete('/tasks/:taskId', async (req, res) => {
     }
 });
 
+// Update project order
+app.put('/users/:userId/project-order', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { projectOrder } = req.body;
+  
+      await User.findByIdAndUpdate(userId, { projectOrder });
+  
+      res.status(200).send({ message: 'Project order updated successfully' });
+    } catch (error) {
+      console.error('Error updating project order:', error);
+      res.status(500).send({ error: 'Error updating project order' });
+    }
+  });
+
+// Update task order
+app.put('/projects/:projectId/task-order', async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const { taskOrder } = req.body;
+      
+      await Project.findByIdAndUpdate(projectId, { taskOrder });
+      
+      res.status(200).send({ message: 'Task order updated successfully' });
+    } catch (error) {
+      console.error('Error updating task order:', error);
+      res.status(500).send({ error: 'Error updating task order' });
+    }
+});
 
 export default app;
