@@ -67,15 +67,20 @@ app.get('/', (req, res) => {
 //Registering
 app.post('/register', async (req, res, next) => {
     try {
-        const { username, email, password } = req.body; 
+        const { username, email, password } = req.body;
         const hashedPassword = bcryptjs.hashSync(password, 10);
-        const newUser = new User({ username, email, password: hashedPassword }); 
+        const newUser = new User({ username, email, password: hashedPassword });
+
         await newUser.save();
         res.status(201).send({ message: 'User registered successfully' });
     } catch (error) {
-        console.error(error);
-        res.status(500).send({ error: 'Error registering user' });
-        next(err);
+        if (error.code === 11000 && error.keyPattern.email) {
+            res.status(400).send({ message: 'Email already in use' });
+        } else {
+            console.error(error);
+            res.status(500).send({ error: 'Error registering user' });
+        }
+        next(error);
     }
 });
 
@@ -351,9 +356,7 @@ app.put('/users/:userId/project-order', async (req, res) => {
     try {
       const { userId } = req.params;
       const { projectOrder } = req.body;
-      
       await User.findByIdAndUpdate(userId, { projectOrder });
-      
       res.status(200).send({ message: 'Project order updated successfully' });
     } catch (error) {
       console.error('Error updating project order:', error);
