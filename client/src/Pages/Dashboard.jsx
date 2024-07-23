@@ -169,21 +169,36 @@ function Dashboard() {
       ...prev,
       [taskId]: !prev[taskId]
     }));
+    if (!expandedTasks[taskId]) {
+      fetchTaskNotes(taskId);
+    }
   };
 
   const addNoteToTask = (taskId) => {
-    const note = prompt("Enter a note for this task:");
-    if (note) {
-      axios.post(`/api/tasks/${taskId}/notes`, { note })
+    const noteContent = prompt("Enter a note for this task:");
+    if (noteContent) {
+      axios.post(`/api/tasks/${taskId}/notes`, { content: noteContent })
         .then(response => {
           setTaskNotes(prev => ({
             ...prev,
-            [taskId]: [...(prev[taskId] || []), note]
+            [taskId]: [...(prev[taskId] || []), response.data]
           }));
         })
         .catch(error => {
           console.error('Error adding note:', error);
         });
+    }
+  };
+
+  const fetchTaskNotes = async (taskId) => {
+    try {
+      const response = await axios.get(`/api/tasks/${taskId}/notes`);
+      setTaskNotes(prev => ({
+        ...prev,
+        [taskId]: response.data
+      }));
+    } catch (error) {
+      console.error('Error fetching notes:', error);
     }
   };
 
@@ -454,7 +469,7 @@ function Dashboard() {
                                 {taskNotes[task._id] && taskNotes[task._id].length > 0 ? (
                                   <ul className="list-disc pl-4">
                                     {taskNotes[task._id].map((note, index) => (
-                                      <li key={index} className="text-sm text-gray-600">{note}</li>
+                                      <li key={index} className="text-sm text-gray-600">{note.content}</li>
                                     ))}
                                   </ul>
                                 ) : (

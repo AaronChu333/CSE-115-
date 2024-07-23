@@ -10,6 +10,7 @@ import flash from 'connect-flash';
 import Project from './models/project.js';
 import Task from './models/task.js';
 import Invitation from './models/Invitations.js';
+import Note from './models/note.js';
 
 
 dotenv.config();
@@ -108,7 +109,7 @@ app.post('/projects', async (req, res) => {
       const { userId, name } = req.body;
   
       // Create a new project
-      const newProject = new Project({ userId, name });
+      const newProject = new Project({ userId, name, taskOrder: [] });
       await newProject.save();
   
       // Add the new project's ID to the user's projects array
@@ -149,6 +150,11 @@ app.post('/tasks', async (req, res) => {
       // Check for missing required fields
       if (!userId || !projectId || !name) {
         return res.status(400).send({ error: 'Missing required fields' });
+      }
+
+      const project = await Project.findById(projectId);
+      if (!project) {
+        return res.status(404).send({ error: 'Project not found' })
       }
   
       // Create a new task
@@ -367,6 +373,44 @@ app.put('/projects/:projectId/task-order', async (req, res) => {
     } catch (error) {
       console.error('Error updating task order:', error);
       res.status(500).send({ error: 'Error updating task order' });
+    }
+});
+
+app.post('/tasks/:taskId/notes', async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const { content } = req.body;
+
+        const task = await Task.findById(taskId);
+        if (!task) {
+            return res.status(404).send({ error: 'Task not found' });
+        }
+
+        const newNote = new Note({ taskId, content });
+        await newNote.save();
+
+        task.notes.push(newNote._id);
+        await task.save();
+
+        res.status(201).send(newNote);
+    } catch (err) {
+        console.error('Error adding note:', err);
+        res.status(500).send({ error: 'Error adding note' });
+    }
+});
+
+// Get notes for a task
+app.get('/tasks/:taskId/notes', async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const task = await Task.findById(taskId).populate('notes');
+        if (!task) {
+            return res.status(404).send({ error: 'Task not found' });
+        }
+        res.status(200).send(task.notes);
+    } catch (err) {
+        console.error('Error fetching notes:', err);
+        res.status(500).send({ error: 'Error fetching notes' });
     }
 });
 
