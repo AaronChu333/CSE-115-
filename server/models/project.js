@@ -15,6 +15,7 @@ const projectSchema = new mongoose.Schema({
             ref: 'User',
         }
     ],
+    taskOrder: [{ type: Schema.Types.ObjectId, ref: 'Task' }]
 
 });
 
