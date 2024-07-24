@@ -1,9 +1,9 @@
-import mongoose,{Schema} from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 const projectSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     name: { type: String, required: true },
-    task: [
+    tasks: [
         {
             type: Schema.Types.ObjectId,
             ref: 'Task',
@@ -15,8 +15,8 @@ const projectSchema = new mongoose.Schema({
             ref: 'User',
         }
     ],
-    taskOrder: [{ type: Schema.Types.ObjectId, ref: 'Task' }]
-
+    taskOrder: [{ type: Schema.Types.ObjectId, ref: 'Task' }],
+    deadline: { type: Date } 
 });
 
 const Project = mongoose.model('Project', projectSchema);

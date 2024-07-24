@@ -106,40 +106,42 @@ app.post('/login', async (req, res) => {
 // Create a project
 app.post('/projects', async (req, res) => {
     try {
-      const { userId, name } = req.body;
-  
-      // Create a new project
-      const newProject = new Project({ userId, name, taskOrder: [] });
-      await newProject.save();
-  
-      // Add the new project's ID to the user's projects array
-      await User.findByIdAndUpdate(
-        userId,
-        { $push: { projects: newProject._id } },
-        { new: true, useFindAndModify: false }
-      );
-  
-      res.status(201).send(newProject);
+        const { userId, name, deadline } = req.body;
+
+        // Create a new project
+        const newProject = new Project({ userId, name, deadline, taskOrder: [] });
+        await newProject.save();
+
+        // Add the new project's ID to the user's projects array
+        await User.findByIdAndUpdate(
+            userId,
+            { $push: { projects: newProject._id } },
+            { new: true, useFindAndModify: false }
+        );
+
+        res.status(201).send(newProject);
     } catch (err) {
-      console.error(err);
-      res.status(500).send({ error: 'Error creating project' });
+        console.error(err);
+        res.status(500).send({ error: 'Error creating project' });
     }
-  });
+});
+
 
 // Fetch projects
 app.get('/projects/:userId', async (req, res) => {
     try {
-      const { userId } = req.params;
-      const user = await User.findById(userId).populate('projects');
-      if (!user) {
-        return res.status(404).send({ error: 'User not found' });
-      }
-      res.status(200).send(user.projects);
+        const { userId } = req.params;
+        const user = await User.findById(userId).populate('projects');
+        if (!user) {
+            return res.status(404).send({ error: 'User not found' });
+        }
+        res.status(200).send(user.projects);
     } catch (err) {
-      console.error(err);
-      res.status(500).send({ error: 'Error fetching projects' });
+        console.error(err);
+        res.status(500).send({ error: 'Error fetching projects' });
     }
-  });
+});
+
 
 // Create a task
 app.post('/tasks', async (req, res) => {
@@ -175,6 +177,28 @@ app.post('/tasks', async (req, res) => {
       res.status(500).send({ error: 'Error creating task', details: err.message });
     }
   });
+
+  // Set task deadline
+app.put('/tasks/:taskId/deadline', async (req, res) => {
+    const { taskId } = req.params;
+    const { deadline } = req.body;
+  
+    try {
+      const task = await Task.findById(taskId);
+      if (!task) {
+        return res.status(404).send({ error: 'Task not found' });
+      }
+  
+      task.deadline = deadline;
+      await task.save();
+  
+      res.status(200).send(task);
+    } catch (err) {
+      console.error('Error setting task deadline:', err);
+      res.status(500).send({ error: 'Error setting task deadline' });
+    }
+  });
+  
 
 // Get tasksId for a project
 app.get('/tasks/:projectId', async (req, res) => {
@@ -239,20 +263,20 @@ app.get('/logout', (req, res, next) => {
     });
 });
 
-// Add a note to a project
-app.post('/projects/:projectId/notes', async (req, res) => {
-    try {
-        const { projectId } = req.params;
-        const { note } = req.body;
-        const project = await Project.findById(projectId);
-        project.notes.push(note);
-        await project.save();
-        res.status(200).send(project);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send({ error: 'Error adding note to project' });
-    }
-});
+// // Add a note to a project
+// app.post('/projects/:projectId/notes', async (req, res) => {
+//     try {
+//         const { projectId } = req.params;
+//         const { note } = req.body;
+//         const project = await Project.findById(projectId);
+//         project.notes.push(note);
+//         await project.save();
+//         res.status(200).send(project);
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).send({ error: 'Error adding note to project' });
+//     }
+// });
 
 // Rename a project
 app.put('/projects/:projectId', async (req, res) => {
@@ -279,26 +303,20 @@ app.put('/projects/:projectId', async (req, res) => {
 
 // Rename a task
 app.put('/tasks/:taskId', async (req, res) => {
+    const { taskId } = req.params;
+    const { name } = req.body;
     try {
-        const { taskId } = req.params;
-        const { userId, newName } = req.body;
+      // Find the task by ID and update the name
+      const task = await Task.findByIdAndUpdate(taskId, { name: name });
+      if (!task) {
+        return res.status(404).json({ message: 'Task not found' });
+      }
 
-        const task = await Task.findOneAndUpdate(
-            { _id: taskId, userId },
-            { name: newName },
-            { new: true }
-        );
-
-        if (!task) {
-            return res.status(404).send({ error: 'Task not found or you do not have permission to rename this task' });
-        }
-
-        res.status(200).send(task);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send({ error: 'Error renaming task' });
+      res.json(task);
+    } catch (error) {
+      console.error('Error updating task:', error);
     }
-});
+  });
 
 // Toggle task completion
 app.put('/tasks/:taskId/toggle', async (req, res) => {
@@ -423,6 +441,104 @@ app.delete('/notes/:noteId', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).send({ error: 'Error deleting note' });
+    }
+});
+
+// Send an invitation
+app.post('/invitations', async (req, res, next) => {
+    const { requesterID, recipientEmail, projectId } = req.body;
+
+    try {
+        const recipient = await User.findOne({ email: recipientEmail });
+        if (!recipient) {
+            return res.status(400).json({ message: 'User not found' });
+        }
+
+        const invitation = new Invitation({
+            sender: requesterID,
+            recipient: recipient._id,
+            project: projectId,
+            status: 'Pending',
+        });
+
+        await invitation.save();
+
+        res.status(201).json(invitation);
+    } catch (error) {
+        next(error);
+    }
+});
+
+app.post('/invitations/:invitationID/accept', async (req, res, next) => {
+    const { invitationID } = req.params;
+
+    try {
+        const invitation = await Invitation.findById(invitationID).populate('project').populate('recipient');
+        if (!invitation) {
+            return res.status(404).json({ message: 'Invitation not found' });
+        }
+
+        invitation.status = 'Accepted';
+        await invitation.save();
+
+        // Add the project to the recipient's projects
+        const recipient = await User.findById(invitation.recipient._id);
+        if (!recipient.projects.includes(invitation.project._id)) {
+            recipient.projects.push(invitation.project._id);
+            await recipient.save();
+        }
+
+        // Add the recipient to the project's collaborators
+        const project = await Project.findById(invitation.project._id);
+        if (!project.collaborators.includes(recipient._id)) {
+            project.collaborators.push(recipient._id);
+            await project.save();
+        }
+
+        res.status(200).json(invitation);
+    } catch (error) {
+        next(error);
+    }
+});
+
+
+// Decline an invitation
+app.post('/invitations/:invitationID/decline', async (req, res, next) => {
+    const { invitationID } = req.params;
+
+    try {
+        const invitation = await Invitation.findById(invitationID);
+        if (!invitation) {
+            return res.status(404).json({ message: 'Invitation not found' });
+        }
+
+        invitation.status = 'Declined';
+        await invitation.save();
+
+        res.status(200).json(invitation);
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Get invitation requests
+app.get('/invitations/requests/:userId', async (req, res, next) => {
+    const { userId } = req.params;
+
+    try {
+        const invitationRequests = await Invitation.find({
+            recipient: userId,
+            status: 'Pending'
+        })
+        .populate({
+            path: 'sender',
+            select: 'username email' // Populate sender's username and email
+          })
+        .populate('project', 'name'); // Populate project's name
+
+        res.status(200).json(invitationRequests);
+    } catch (error) {
+        next(error);
     }
 });
 

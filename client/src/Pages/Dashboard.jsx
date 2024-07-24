@@ -5,12 +5,14 @@ import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Sidebar from './Sidebar';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 function Dashboard() {
   const [projects, setProjects] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
-  const [newProjectNote, setNewProjectNote] = useState('');
+  const [newProjectDeadline, setNewProjectDeadline] = useState(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [isInvitationsModalOpen, setIsInvitationsModalOpen] = useState(false);
@@ -18,14 +20,16 @@ function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedUserId = localStorage.getItem('userId');
-    if (storedUserId) {
-      fetchProjects(storedUserId);
+    const storedUserId = localStorage.getItem('userId')
+    fetchProjects(storedUserId);
+    const interval = setInterval(() => {
       fetchInvitations(storedUserId);
-    } else {
-      console.error('No userId found in localStorage');
-    }
+      fetchProjects(storedUserId);
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
+
 
   const fetchProjects = async (userId) => {
     try {
@@ -36,18 +40,9 @@ function Dashboard() {
     }
   };
 
-  const fetchInvitations = async (userId) => {
-    try {
-      const response = await axios.get(`/api/invitations/${userId}`);
-      setInvitations(response.data);
-    } catch (error) {
-      console.error('Error fetching invitations:', error);
-    }
-  };
-
   const handleCreateProject = (e) => {
     e.preventDefault();
-    if (!newProjectName) return;
+    if (!newProjectName || !newProjectDeadline) return;
 
     const userId = localStorage.getItem('userId');
     if (!userId) {
@@ -55,11 +50,11 @@ function Dashboard() {
       return;
     }
 
-    axios.post('/api/projects', { userId, name: newProjectName, note: newProjectNote })
+    axios.post('/api/projects', { userId, name: newProjectName, deadline: newProjectDeadline })
       .then(response => {
         setProjects([...projects, response.data]);
         setNewProjectName('');
-        setNewProjectNote('');
+        setNewProjectDeadline(null);
         setIsModalOpen(false);
       })
       .catch(error => {
@@ -78,22 +73,13 @@ function Dashboard() {
       });
   };
 
-  const handleInviteSubmit = async () => {
+  const fetchInvitations = async (userId) => {
     try {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        console.error('No userId found in localStorage');
-        return;
-      }
-  
-      await axios.post('/api/invitations', {
-        sender: userId,
-        recipient: inviteEmail,
-      });
-      setInviteEmail('');
-      setIsInviteModalOpen(false);
+      const response = await axios.get(`/api/invitations/requests/${userId}`);
+      setInvitations(response.data);
+      //console.log('invitations: ', response.data)
     } catch (error) {
-      console.error('Error sending invite:', error.response ? error.response.data : error.message);
+      console.error('Error fetching invitations:', error);
     }
   };
 
@@ -108,7 +94,7 @@ function Dashboard() {
 
   const handleRejectInvitation = async (invitationId) => {
     try {
-      await axios.post(`/api/invitations/${invitationId}/reject`);
+      await axios.post(`/api/invitations/${invitationId}/decline`);
       fetchInvitations(localStorage.getItem('userId'));
     } catch (error) {
       console.error('Error rejecting invitation:', error);
@@ -187,7 +173,14 @@ function Dashboard() {
                         onClick={() => navigate(`/projects/${project._id}`, { state: { projectName: project.name } })}
                       >
                         <div className="flex justify-between items-center">
-                          <h2 className="text-lg font-semibold">{project.name}</h2>
+                          <div>
+                            <h2 className="text-lg font-semibold">{project.name}</h2>
+                            {project.deadline && (
+                              <p className="text-sm text-gray-600">
+                                {new Date(project.deadline).toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
                           <button
                             onClick={(e) => deleteProject(e, project._id)}
                             className="text-red-500 font-bold px-2 py-1 rounded hover:bg-red-100"
@@ -195,7 +188,6 @@ function Dashboard() {
                             <FontAwesomeIcon icon={faTrash} />
                           </button>
                         </div>
-                        {project.note && <p className="mt-2 text-sm text-gray-600">{project.note}</p>}
                       </div>
                     )}
                   </Draggable>
@@ -231,13 +223,14 @@ function Dashboard() {
                   />
                 </div>
                 <div className="mb-3">
-                  <label htmlFor="projectNote" className="block mb-1">Project Note</label>
-                  <textarea
-                    id="projectNote"
+                  <label htmlFor="projectDeadline" className="block mb-1">Project Deadline</label>
+                  <DatePicker
+                    selected={newProjectDeadline}
+                    onChange={(date) => setNewProjectDeadline(date)}
+                    dateFormat="yyyy/MM/dd"
                     className="w-full border rounded p-2"
-                    value={newProjectNote}
-                    onChange={(e) => setNewProjectNote(e.target.value)}
-                  ></textarea>
+                    placeholderText="Select a deadline"
+                  />
                 </div>
                 <div className="flex justify-end">
                   <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Create</button>
@@ -257,6 +250,8 @@ function Dashboard() {
                     <div className="flex justify-between items-center">
                       <span className="font-semibold">{invitation.project.name}</span>
                       <div>
+                        <span className = "flex font-semibold">Sent By User: {invitation.sender.username}</span>
+                          <p className = "flex">Email: {invitation.sender.email}</p>
                         <button
                           onClick={() => handleAcceptInvitation(invitation._id)}
                           className="bg-green-500 text-white px-4 py-2 rounded mr-2"
@@ -288,3 +283,4 @@ function Dashboard() {
 }
 
 export default Dashboard;
+
