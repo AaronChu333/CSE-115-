@@ -231,9 +231,9 @@ function ProjectTasks() {
   return (
     <div className="project-tasks-container flex">
       <Sidebar setIsInvitationsModalOpen={setIsInvitationsModalOpen} />
-      <div className="flex-1 bg-gray-100 min-h-screen p-8">
+      <div className="flex-1 bg-gray-900 min-h-screen p-8 text-white">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">{projectName}</h1>
+          <h1 className="text-4xl font-bold">{projectName}</h1>
           <button
             onClick={handleInvite}
             className="bg-blue-500 text-white px-4 py-2 rounded flex items-center"
@@ -243,12 +243,12 @@ function ProjectTasks() {
           </button>
         </div>
         <form onSubmit={handleCreateTask} className="mb-4">
-        <div className="mb-3 w-1/4">
+          <div className="mb-3 w-1/4">
             <label htmlFor="taskName" className="block mb-1">Task Name</label>
             <input
               type="text"
               id="taskName"
-              className="w-full border rounded p-2"
+              className="w-full border rounded p-2 text-black"
               value={newTaskName}
               onChange={(e) => setNewTaskName(e.target.value)}
             />
@@ -270,7 +270,7 @@ function ProjectTasks() {
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        className="bg-gray-100 p-2 rounded"
+                        className="bg-gray-800 p-2 rounded"
                       >
                         <div className="flex justify-between items-center">
                           <div className="flex items-center">
@@ -313,12 +313,12 @@ function ProjectTasks() {
                           </div>
                         </div>
                         {expandedTasks[task._id] && (
-                          <div className="mt-2 pl-6 bg-white p-2 rounded shadow">
+                          <div className="mt-2 pl-6 bg-gray-700 p-2 rounded shadow">
                             <h4 className="font-semibold">Notes:</h4>
                             {taskNotes[task._id] && taskNotes[task._id].length > 0 ? (
                               <ul className="list-disc pl-4">
                                 {taskNotes[task._id].map((note, index) => (
-                                  <li key={note._id} className="text-sm text-gray-600 flex justify-between">
+                                  <li key={note._id} className="text-sm text-gray-300 flex justify-between">
                                     {note.content}
                                     <button
                                       onClick={() => deleteNote(note._id, task._id)}
@@ -330,7 +330,7 @@ function ProjectTasks() {
                                 ))}
                               </ul>
                             ) : (
-                              <p className="text-sm text-gray-500">No notes yet.</p>
+                              <p className="text-sm text-gray-400">No notes yet.</p>
                             )}
                           </div>
                         )}
