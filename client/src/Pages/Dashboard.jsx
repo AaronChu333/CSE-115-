@@ -1,26 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faFolder, faTasks, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import Sidebar from './Sidebar';
 
 function Dashboard() {
   const [projects, setProjects] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectNote, setNewProjectNote] = useState('');
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [tasks, setTasks] = useState([]);
-  const [newTaskName, setNewTaskName] = useState('');
-  const [taskNotes, setTaskNotes] = useState({});
-  const [expandedTasks, setExpandedTasks] = useState({});
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [isInvitationsModalOpen, setIsInvitationsModalOpen] = useState(false);
   const [invitations, setInvitations] = useState([]);
   const navigate = useNavigate();
-  const projectNoteRef = useRef(null);
-
-  axios.defaults.withCredentials = true;
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('userId');
@@ -31,13 +26,6 @@ function Dashboard() {
       console.error('No userId found in localStorage');
     }
   }, []);
-
-  useEffect(() => {
-    if (projectNoteRef.current) {
-      projectNoteRef.current.style.height = 'auto';
-      projectNoteRef.current.style.height = projectNoteRef.current.scrollHeight + 'px';
-    }
-  }, [newProjectNote]);
 
   const fetchProjects = async (userId) => {
     try {
@@ -57,20 +45,6 @@ function Dashboard() {
     }
   };
 
-  const fetchTasks = async (projectId) => {
-    try {
-      const response = await axios.get(`/api/tasks/${projectId}`);
-      setTasks(response.data);
-      const notes = {};
-      response.data.forEach(task => {
-        notes[task._id] = task.notes;
-      });
-      setTaskNotes(notes);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-    }
-  };
-
   const handleCreateProject = (e) => {
     e.preventDefault();
     if (!newProjectName) return;
@@ -86,42 +60,11 @@ function Dashboard() {
         setProjects([...projects, response.data]);
         setNewProjectName('');
         setNewProjectNote('');
+        setIsModalOpen(false);
       })
       .catch(error => {
         console.error('Error creating project:', error);
       });
-  };
-
-  const handleCreateTask = (e) => {
-    e.preventDefault();
-    if (!newTaskName || !selectedProject) {
-      console.error('Task name or selected project is missing');
-      return;
-    }
-
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
-      console.error('No userId found in localStorage');
-      return;
-    }
-
-    axios.post('/api/tasks', { 
-      projectId: selectedProject._id, 
-      name: newTaskName,
-      userId
-    })
-      .then(response => {
-        setTasks([...tasks, response.data]);
-        setNewTaskName('');
-      })
-      .catch(error => {
-        console.error('Error creating task:', error.response ? error.response.data : error.message);
-      });
-  };
-
-  const handleProjectSelect = (project) => {
-    setSelectedProject(project);
-    fetchTasks(project._id);
   };
 
   const deleteProject = (e, id) => {
@@ -129,79 +72,23 @@ function Dashboard() {
     axios.delete(`/api/projects/${id}`)
       .then(() => {
         setProjects(projects.filter(project => project._id !== id));
-        if (selectedProject && selectedProject._id === id) {
-          setSelectedProject(null);
-          setTasks([]);
-        }
       })
       .catch(error => {
         console.error('Error deleting project:', error);
       });
   };
 
-  const deleteTask = (id) => {
-    axios.delete(`/api/tasks/${id}`)
-      .then(() => {
-        setTasks(tasks.filter(task => task._id !== id));
-      })
-      .catch(error => {
-        console.error('Error deleting task:', error);
-      });
-  };
-
-  const toggleTaskCompletion = (taskId) => {
-    axios.put(`/api/tasks/${taskId}/toggle`)
-      .then(response => {
-        setTasks(tasks.map(task => 
-          task._id === taskId ? response.data : task
-        ));
-      })
-      .catch(error => {
-        console.error('Error toggling task completion:', error);
-      });
-  };
-
-  const toggleTaskNotes = (e, taskId) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setExpandedTasks(prev => ({
-      ...prev,
-      [taskId]: !prev[taskId]
-    }));
-  };
-
-  const addNoteToTask = (taskId) => {
-    const note = prompt("Enter a note for this task:");
-    if (note) {
-      axios.post(`/api/tasks/${taskId}/notes`, { note })
-        .then(response => {
-          setTaskNotes(prev => ({
-            ...prev,
-            [taskId]: [...(prev[taskId] || []), note]
-          }));
-        })
-        .catch(error => {
-          console.error('Error adding note:', error);
-        });
-    }
-  };
-
-  const handleInvite = () => {
-    setIsInviteModalOpen(true);
-  };
-
   const handleInviteSubmit = async () => {
     try {
       const userId = localStorage.getItem('userId');
-      if (!userId || !selectedProject) {
-        console.error('User ID or selected project is missing');
+      if (!userId) {
+        console.error('No userId found in localStorage');
         return;
       }
   
       await axios.post('/api/invitations', {
         sender: userId,
         recipient: inviteEmail,
-        projectId: selectedProject._id,
       });
       setInviteEmail('');
       setIsInviteModalOpen(false);
@@ -239,216 +126,163 @@ function Dashboard() {
       });
   };
 
+  const onDragEnd = (result) => {
+    const { destination, source } = result;
+
+    if (!destination) {
+      return;
+    }
+
+    const newProjects = Array.from(projects);
+    const [movedProject] = newProjects.splice(source.index, 1);
+    newProjects.splice(destination.index, 0, movedProject);
+
+    setProjects(newProjects);
+    updateProjectOrder(newProjects);
+  };
+
+  const updateProjectOrder = (newProjects) => {
+    const userId = localStorage.getItem('userId');
+    const projectOrder = newProjects.map(project => project._id);
+    axios.put(`/users/${userId}/project-order`, { projectOrder })
+      .then(response => {
+        console.log('Project order updated successfully');
+      })
+      .catch(error => {
+        console.error('Error updating project order:', error);
+      });
+  };
+
   return (
-    <div className="dashboard-container bg-gray-100 min-h-screen p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Projects</h2>
-          <form onSubmit={handleCreateProject} className="mb-4">
-            <div className="mb-3">
-              <label htmlFor="projectName" className="block mb-1">Project Name</label>
-              <input
-                type="text"
-                id="projectName"
-                className={`w-full border rounded p-2 transition-colors duration-200 ${
-                  newProjectName ? 'bg-blue-50' : 'bg-white'
-                }`}
-                value={newProjectName}
-                onChange={(e) => setNewProjectName(e.target.value)}
-              />
-            </div>
-            <div className="mb-3">
-              <label htmlFor="projectNote" className="block mb-1">Project Note</label>
-              <textarea
-                ref={projectNoteRef}
-                id="projectNote"
-                className={`w-full border rounded p-2 overflow-hidden resize-none transition-colors duration-200 ${
-                  newProjectNote ? 'bg-blue-50' : 'bg-white'
-                }`}
-                value={newProjectNote}
-                onChange={(e) => setNewProjectNote(e.target.value)}
-                rows="1"
-                style={{ minHeight: '2.5rem' }}
-              ></textarea>
-            </div>
-            <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">Create Project</button>
-          </form>
-          <div className="overflow-y-auto" style={{ maxHeight: '400px' }}>
-            <div className="grid grid-cols-1 gap-4">
-              {projects.map((project) => (
+    <div className="dashboard-container flex">
+      <Sidebar setIsInvitationsModalOpen={setIsInvitationsModalOpen} />
+      <div className="flex-1 bg-gray-100 min-h-screen p-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Projects</h1>
+          <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+        </div>
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="projects" direction="horizontal">
+            {(provided) => (
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12"
+              >
+                {projects.map((project, index) => (
+                  <Draggable key={project._id} draggableId={project._id} index={index}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        className={`bg-white p-4 rounded-lg shadow-md cursor-pointer hover:bg-gray-200 ${
+                          snapshot.isDragging ? 'dragging' : ''
+                        }`}
+                        style={{
+                          height: '250px',
+                          width: '250px',
+                          ...provided.draggableProps.style,
+                        }}
+                        onClick={() => navigate(`/projects/${project._id}`, { state: { projectName: project.name } })}
+                      >
+                        <div className="flex justify-between items-center">
+                          <h2 className="text-lg font-semibold">{project.name}</h2>
+                          <button
+                            onClick={(e) => deleteProject(e, project._id)}
+                            className="text-red-500 font-bold px-2 py-1 rounded hover:bg-red-100"
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </button>
+                        </div>
+                        {project.note && <p className="mt-2 text-sm text-gray-600">{project.note}</p>}
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
                 <div
-                  key={project._id}
-                  className="bg-gray-100 p-4 rounded flex flex-col cursor-pointer hover:bg-gray-200"
-                  onClick={() => handleProjectSelect(project)}
+                  className="bg-gray-200 p-4 rounded-lg shadow-md flex items-center justify-center cursor-pointer hover:bg-gray-300"
+                  style={{
+                    height: '250px',
+                    width: '250px',
+                  }}
+                  onClick={() => setIsModalOpen(true)}
                 >
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      <FontAwesomeIcon icon={faFolder} className="mr-2" />
-                      <span className="font-semibold">{project.name}</span>
-                    </div>
-                    <button 
-                      onClick={(e) => deleteProject(e, project._id)}
-                      className="text-red-500 font-bold px-2 py-1 rounded hover:bg-red-100"
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
-                  </div>
-                  {project.note && (
-                    <p className="mt-2 text-sm text-gray-600">{project.note}</p>
-                  )}
+                  <FontAwesomeIcon icon={faPlus} className="text-3xl text-gray-500" />
                 </div>
-              ))}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+        {isModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
+              <h3 className="text-xl font-semibold mb-4">Create Project</h3>
+              <form onSubmit={handleCreateProject}>
+                <div className="mb-3">
+                  <label htmlFor="projectName" className="block mb-1">Project Name</label>
+                  <input
+                    type="text"
+                    id="projectName"
+                    className="w-full border rounded p-2"
+                    value={newProjectName}
+                    onChange={(e) => setNewProjectName(e.target.value)}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="projectNote" className="block mb-1">Project Note</label>
+                  <textarea
+                    id="projectNote"
+                    className="w-full border rounded p-2"
+                    value={newProjectNote}
+                    onChange={(e) => setNewProjectNote(e.target.value)}
+                  ></textarea>
+                </div>
+                <div className="flex justify-end">
+                  <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Create</button>
+                  <button onClick={() => setIsModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                </div>
+              </form>
             </div>
           </div>
-        </div>
-
-        {selectedProject && (
-          <div className="bg-white p-6 rounded-lg shadow-md relative">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Tasks for {selectedProject.name}</h2>
-              <button onClick={handleInvite} className="bg-blue-500 text-white px-4 py-2 rounded ml-4">Invite</button>
-            </div>
-            <form onSubmit={handleCreateTask} className="mb-4">
-              <div className="mb-3">
-                <label htmlFor="taskName" className="block mb-1">Task Name</label>
-                <input
-                  type="text"
-                  id="taskName"
-                  className={`w-full border rounded p-2 transition-colors duration-200 ${
-                    newTaskName ? 'bg-blue-50' : 'bg-white'
-                  }`}
-                  value={newTaskName}
-                  onChange={(e) => setNewTaskName(e.target.value)}
-                />
-              </div>
-              <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded">Create Task</button>
-            </form>
-            <ul className="space-y-2">
-              {tasks.map((task) => (
-                <li key={task._id} className="bg-gray-100 p-2 rounded">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={task.completed}
-                        onChange={() => toggleTaskCompletion(task._id)}
-                        className="mr-2"
-                      />
-                      <span className={task.completed ? 'line-through text-gray-500' : ''}>
-                        {task.name}
-                      </span>
-                    </div>
-                    <div>
-                      <button
-                        onClick={() => addNoteToTask(task._id)}
-                        className="bg-blue-500 text-white px-2 py-1 rounded mr-2 text-xs"
-                      >
-                        +Notes
-                      </button>
-                      <button
-                        onClick={(e) => toggleTaskNotes(e, task._id)}
-                        className="bg-green-500 text-white px-2 py-1 rounded mr-2 text-xs"
-                      >
-                        {expandedTasks[task._id] ? (
-                          <FontAwesomeIcon icon={faChevronUp} />
-                        ) : (
-                          <FontAwesomeIcon icon={faChevronDown} />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => deleteTask(task._id)}
-                        className="text-red-500 font-bold px-2 py-1 rounded hover:bg-red-100"
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
+        )}
+        {isInvitationsModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
+              <h3 className="text-xl font-semibold mb-4">Project Invitations</h3>
+              <div className="space-y-4">
+                {invitations.map((invitation) => (
+                  <div key={invitation._id} className="bg-gray-100 p-4 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold">{invitation.project.name}</span>
+                      <div>
+                        <button
+                          onClick={() => handleAcceptInvitation(invitation._id)}
+                          className="bg-green-500 text-white px-4 py-2 rounded mr-2"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => handleRejectInvitation(invitation._id)}
+                          className="bg-red-500 text-white px-4 py-2 rounded"
+                        >
+                          Reject
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  {expandedTasks[task._id] && (
-                    <div className="mt-2 pl-6 bg-white p-2 rounded shadow">
-                      <h4 className="font-semibold">Notes:</h4>
-                      {taskNotes[task._id] && taskNotes[task._id].length > 0 ? (
-                        <ul className="list-disc pl-4">
-                          {taskNotes[task._id].map((note, index) => (
-                            <li key={index} className="text-sm text-gray-600">{note}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-sm text-gray-500">No notes yet.</p>
-                      )}
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
+                ))}
+              </div>
+              <div className="flex justify-end mt-4">
+                <button onClick={() => setIsInvitationsModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      {isInviteModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
-            <h3 className="text-xl font-semibold mb-4">Invite Collaborator</h3>
-            <input
-              type="email"
-              className="w-full border rounded p-2 mb-4"
-              placeholder="Enter collaborator's email"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-            />
-            <div className="flex justify-end">
-              <button onClick={handleInviteSubmit} className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Send Invite</button>
-              <button onClick={() => setIsInviteModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <button
-        onClick={() => setIsInvitationsModalOpen(true)}
-        className="fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded shadow-lg"
-      >
-        Invitations
-      </button>
-
-      {isInvitationsModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
-            <h3 className="text-xl font-semibold mb-4">Project Invitations</h3>
-            <div className="space-y-4">
-              {invitations.map((invitation) => (
-                <div key={invitation._id} className="bg-gray-100 p-4 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">{invitation.project.name}</span>
-                    <div>
-                      <button
-                        onClick={() => handleAcceptInvitation(invitation._id)}
-                        className="bg-green-500 text-white px-4 py-2 rounded mr-2"
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={() => handleRejectInvitation(invitation._id)}
-                        className="bg-red-500 text-white px-4 py-2 rounded"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-end mt-4">
-              <button onClick={() => setIsInvitationsModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
