@@ -156,9 +156,9 @@ function Dashboard() {
   return (
     <div className="dashboard-container flex">
       <Sidebar setIsInvitationsModalOpen={setIsInvitationsModalOpen} />
-      <div className="flex-1 bg-gray-100 min-h-screen p-8">
+      <div className="flex-1 bg-gray-900 min-h-screen p-8 text-white">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Projects</h1>
+          <h1 className="text-4xl font-bold">Projects</h1>
           <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
         </div>
         <DragDropContext onDragEnd={onDragEnd}>
@@ -176,7 +176,7 @@ function Dashboard() {
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        className={`bg-white p-4 rounded-lg shadow-md cursor-pointer hover:bg-gray-200 ${
+                        className={`bg-gray-800 p-4 rounded-lg shadow-md cursor-pointer hover:bg-gray-700 ${
                           snapshot.isDragging ? 'dragging' : ''
                         }`}
                         style={{
@@ -195,21 +195,21 @@ function Dashboard() {
                             <FontAwesomeIcon icon={faTrash} />
                           </button>
                         </div>
-                        {project.note && <p className="mt-2 text-sm text-gray-600">{project.note}</p>}
+                        {project.note && <p className="mt-2 text-sm text-gray-300">{project.note}</p>}
                       </div>
                     )}
                   </Draggable>
                 ))}
                 {provided.placeholder}
                 <div
-                  className="bg-gray-200 p-4 rounded-lg shadow-md flex items-center justify-center cursor-pointer hover:bg-gray-300"
+                  className="bg-gray-800 p-4 rounded-lg shadow-md flex items-center justify-center cursor-pointer hover:bg-gray-700"
                   style={{
                     height: '250px',
                     width: '250px',
                   }}
                   onClick={() => setIsModalOpen(true)}
                 >
-                  <FontAwesomeIcon icon={faPlus} className="text-3xl text-gray-500" />
+                  <FontAwesomeIcon icon={faPlus} className="text-3xl text-white" />
                 </div>
               </div>
             )}
@@ -217,24 +217,24 @@ function Dashboard() {
         </DragDropContext>
         {isModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
-              <h3 className="text-xl font-semibold mb-4">Create Project</h3>
+            <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-1/3">
+              <h3 className="text-xl font-semibold mb-4 text-white">Create Project</h3>
               <form onSubmit={handleCreateProject}>
                 <div className="mb-3">
-                  <label htmlFor="projectName" className="block mb-1">Project Name</label>
+                  <label htmlFor="projectName" className="block mb-1 text-white">Project Name</label>
                   <input
                     type="text"
                     id="projectName"
-                    className="w-full border rounded p-2"
+                    className="w-full border rounded p-2 bg-gray-700 text-white"
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
                   />
                 </div>
                 <div className="mb-3">
-                  <label htmlFor="projectNote" className="block mb-1">Project Note</label>
+                  <label htmlFor="projectNote" className="block mb-1 text-white">Project Note</label>
                   <textarea
                     id="projectNote"
-                    className="w-full border rounded p-2"
+                    className="w-full border rounded p-2 bg-gray-700 text-white"
                     value={newProjectNote}
                     onChange={(e) => setNewProjectNote(e.target.value)}
                   ></textarea>
@@ -249,13 +249,13 @@ function Dashboard() {
         )}
         {isInvitationsModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
-              <h3 className="text-xl font-semibold mb-4">Project Invitations</h3>
+            <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-1/3">
+              <h3 className="text-xl font-semibold mb-4 text-white">Project Invitations</h3>
               <div className="space-y-4">
                 {invitations.map((invitation) => (
-                  <div key={invitation._id} className="bg-gray-100 p-4 rounded-lg">
+                  <div key={invitation._id} className="bg-gray-900 p-4 rounded-lg">
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold">{invitation.project.name}</span>
+                      <span className="font-semibold text-white">{invitation.project.name}</span>
                       <div>
                         <button
                           onClick={() => handleAcceptInvitation(invitation._id)}

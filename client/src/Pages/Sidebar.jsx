@@ -12,7 +12,7 @@ function Sidebar({ setIsInvitationsModalOpen }) {
   };
 
   return (
-    <div className={`sidebar bg-gray-800 text-white ${isExpanded ? 'w-64' : 'w-16'} transition-all duration-200`}>
+    <div className={`sidebar bg-purple-900 text-white ${isExpanded ? 'w-64' : 'w-16'} transition-all duration-200`}>
       <div className="flex justify-between items-center p-4">
         <button onClick={handleToggle}>
           <FontAwesomeIcon icon={isExpanded ? faChevronLeft : faChevronRight} />
@@ -21,14 +21,14 @@ function Sidebar({ setIsInvitationsModalOpen }) {
       </div>
       <div className="mt-4">
         <button
-          className="flex items-center w-full p-4 hover:bg-gray-700"
+          className="flex items-center w-full p-4 hover:bg-purple-700"
           onClick={() => navigate('/dashboard')}
         >
           <FontAwesomeIcon icon={faFolder} className="mr-2" />
           {isExpanded && <span>Dashboard</span>}
         </button>
         <button
-          className="flex items-center w-full p-4 hover:bg-gray-700 mt-4"
+          className="flex items-center w-full p-4 hover:bg-purple-700 mt-4"
           onClick={() => setIsInvitationsModalOpen(true)}
         >
           <FontAwesomeIcon icon={faEnvelope} className="mr-2" />
