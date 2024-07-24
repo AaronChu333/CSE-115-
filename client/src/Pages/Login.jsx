@@ -19,11 +19,11 @@ function Login() {
     };
 
     return (
-        <div className="flex justify-center items-center bg-gray-800 h-screen space-y-4 text-black overflow-hidden">
-            <div className="bg-white px-80 py-96 rounded w-50">
+        <div className="flex justify-center items-center bg-gray-800 h-screen text-black overflow-hidden">
+            <div className="auth-container">
                 <h2 className="text-center font-bold text-4xl mb-10">Login</h2>
                 <form onSubmit={handleSubmit}>
-                    <div className="flex flex-col justify-center mb-3 mr-5 font-bold text-xl space-y-2">
+                    <div className="flex flex-col justify-center mb-3 font-bold text-xl space-y-2">
                         <label htmlFor="username">
                             Username
                         </label>
@@ -46,15 +46,15 @@ function Login() {
                             className="form-control rounded-full text-black font-normal text-2xl outline-none bg-[#eaeaea] py-3 text-center"
                             onChange={(e) => setPassword(e.target.value)}
                         />
-                    <button type="submit" className="btn btn-primary">
-                        <div className="text-center ml-15 py-3">
-                            <p className="border-1 border-black rounded-full bg-black px-4 py-3 text-white">Login</p>
-                        </div>
+                        <button type="submit" className="btn btn-primary mt-4">
+                            <div className="text-center py-3">
+                                <p className="border-1 border-black rounded-full bg-black px-4 py-3 text-white">Login</p>
+                            </div>
                         </button>
-                        </div>
+                    </div>
                 </form>
                 <div className="mt-3 text-center">
-                    <p>Don't have an account? <a href='/register' className='text-blue-500'>Register here.</a></p>
+                    <p>Don't have an account? <Link to='/register' className='text-blue-500'>Register here.</Link></p>
                 </div>
             </div>
         </div>

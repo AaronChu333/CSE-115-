@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 function Signup() {
@@ -57,8 +57,8 @@ function Signup() {
     }, [message]);
 
     return (
-        <div className="flex justify-center items-center bg-gray-800 h-screen text-black overflow-hidden relative">
-            <div className="bg-white px-16 py-20 rounded">
+        <div className="flex justify-center items-center bg-gray-800 h-screen text-black overflow-hidden">
+            <div className="auth-container register">
                 <h2 className="text-center font-bold text-4xl mb-10">Register</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="flex flex-col mb-3 space-y-2">
@@ -98,7 +98,7 @@ function Signup() {
                             className="form-control rounded-full text-black font-normal text-2xl outline-none bg-[#eaeaea] py-3 text-center"
                             onChange={(e) => setConfirmPassword(e.target.value)}
                         />
-                        <button type="submit" className="btn btn-primary">
+                        <button type="submit" className="btn btn-primary mt-4">
                             <div className="text-center py-3">
                                 <p className="border-1 border-black rounded-full bg-black px-5 py-3 text-white">Register</p>
                             </div>
@@ -106,7 +106,7 @@ function Signup() {
                     </div>
                 </form>
                 <div className="mt-3 text-center">
-                    <p>Already have an account? <a href='/login' className='text-blue-500'>Sign in here.</a></p>
+                    <p>Already have an account? <Link to='/login' className='text-blue-500'>Sign in here.</Link></p>
                 </div>
             </div>
             {message && (

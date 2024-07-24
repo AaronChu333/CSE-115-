@@ -6,7 +6,8 @@ const taskSchema = new mongoose.Schema({
     name: { type: String, required: true },
     notes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Note' }],
     completed: { type: Boolean, default: false },
-    order: { type: Number, default: 0 }
+    order: { type: Number, default: 0 },
+    deadline: { type: Date } 
 });
 
 const Task = mongoose.model('Task', taskSchema);

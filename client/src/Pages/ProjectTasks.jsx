@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faChevronDown, faChevronUp, faBars, faUserPlus } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faChevronDown, faChevronUp, faBars, faUserPlus, faEdit, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Sidebar from './Sidebar';
 import { useParams, useLocation } from 'react-router-dom';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 function ProjectTasks() {
   const { projectId } = useParams();
@@ -21,6 +23,12 @@ function ProjectTasks() {
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [currentTaskId, setCurrentTaskId] = useState(null);
   const [noteContent, setNoteContent] = useState('');
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [renameTaskId, setRenameTaskId] = useState(null);
+  const [renameTaskName, setRenameTaskName] = useState('');
+  const [isDeadlineModalOpen, setIsDeadlineModalOpen] = useState(false);
+  const [taskDeadline, setTaskDeadline] = useState(null);
+  const [deadlineTaskId, setDeadlineTaskId] = useState(null);
 
   useEffect(() => {
     fetchTasks(projectId);
@@ -190,17 +198,18 @@ function ProjectTasks() {
     setIsInviteModalOpen(true);
   };
 
-  const handleInviteSubmit = async () => {
+  const handleInviteSubmit = async (e) => {
+    e.preventDefault();
     try {
       const userId = localStorage.getItem('userId');
       if (!userId) {
         console.error('No userId found in localStorage');
         return;
       }
-  
+
       await axios.post('/api/invitations', {
         sender: userId,
-        recipient: inviteEmail,
+        recipientEmail: inviteEmail,
         projectId: projectId
       });
       setInviteEmail('');
@@ -228,6 +237,43 @@ function ProjectTasks() {
     }
   };
 
+  const openRenameModal = (taskId, taskName) => {
+    setRenameTaskId(taskId);
+    setRenameTaskName(taskName);
+    setIsRenameModalOpen(true);
+  };
+
+  const handleRenameSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`/api/tasks/${renameTaskId}`, { name: renameTaskName });
+      setTasks(tasks.map(task => 
+        task._id === renameTaskId ? { ...task, name: renameTaskName } : task
+      ));
+      setIsRenameModalOpen(false);
+    } catch (error) {
+      console.error('Error renaming task:', error);
+    }
+  };
+
+  const openDeadlineModal = (taskId) => {
+    setDeadlineTaskId(taskId);
+    setIsDeadlineModalOpen(true);
+  };
+
+  const handleDeadlineSubmit = async (e) => {
+    e.preventDefault
+    try {
+      await axios.put(`/api/tasks/${deadlineTaskId}/deadline`, { deadline: taskDeadline });
+      setTasks(tasks.map(task =>
+        task._id === deadlineTaskId ? { ...task, deadline: taskDeadline } : task
+      ));
+      setIsDeadlineModalOpen(false);
+    } catch (error) {
+      console.error('Error setting deadline:', error);
+    }
+  };
+
   return (
     <div className="project-tasks-container flex">
       <Sidebar setIsInvitationsModalOpen={setIsInvitationsModalOpen} />
@@ -243,7 +289,7 @@ function ProjectTasks() {
           </button>
         </div>
         <form onSubmit={handleCreateTask} className="mb-4">
-        <div className="mb-3 w-1/4">
+          <div className="mb-3 w-1/4">
             <label htmlFor="taskName" className="block mb-1">Task Name</label>
             <input
               type="text"
@@ -283,9 +329,16 @@ function ProjectTasks() {
                               onChange={() => toggleTaskCompletion(task._id)}
                               className="mr-2"
                             />
-                            <span className={task.completed ? 'line-through text-gray-500' : ''}>
-                              {task.name}
-                            </span>
+                            <div>
+                              <span className={task.completed ? 'line-through text-gray-500' : ''}>
+                                {task.name}
+                              </span>
+                              {task.deadline && (
+                                <div className="text-sm text-gray-500">
+                                  Due: {new Date(task.deadline).toLocaleDateString()}
+                                </div>
+                              )}
+                            </div>
                           </div>
                           <div>
                             <button
@@ -303,6 +356,18 @@ function ProjectTasks() {
                               ) : (
                                 <FontAwesomeIcon icon={faChevronDown} />
                               )}
+                            </button>
+                            <button
+                              onClick={() => openRenameModal(task._id, task.name)}
+                              className="bg-yellow-500 text-white px-2 py-1 rounded mr-2 text-xs"
+                            >
+                              <FontAwesomeIcon icon={faEdit} />
+                            </button>
+                            <button
+                              onClick={() => openDeadlineModal(task._id)}
+                              className="bg-purple-500 text-white px-2 py-1 rounded mr-2 text-xs"
+                            >
+                              <FontAwesomeIcon icon={faCalendarAlt} />
                             </button>
                             <button
                               onClick={() => deleteTask(task._id)}
@@ -416,8 +481,53 @@ function ProjectTasks() {
                   ></textarea>
                 </div>
                 <div className="flex justify-end">
-                  <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Add Note</button>
+                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Add Note</button>
                   <button onClick={() => setIsNoteModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        {isRenameModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
+              <h3 className="text-xl font-semibold mb-4">Rename Task</h3>
+              <form onSubmit={handleRenameSubmit}>
+                <div className="mb-3">
+                  <label htmlFor="renameTaskName" className="block mb-1">New Task Name</label>
+                  <input
+                    type="text"
+                    id="renameTaskName"
+                    className="w-full border rounded p-2"
+                    value={renameTaskName}
+                    onChange={(e) => setRenameTaskName(e.target.value)}
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Rename Task</button>
+                  <button onClick={() => setIsRenameModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        {isDeadlineModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
+              <h3 className="text-xl font-semibold mb-4">Set Deadline</h3>
+              <form onSubmit={handleDeadlineSubmit}>
+                <div className="mb-3">
+                  <label htmlFor="taskDeadline" className="block mb-1">Deadline</label>
+                  <DatePicker
+                    selected={taskDeadline}
+                    onChange={(date) => setTaskDeadline(date)}
+                    dateFormat="MMMM d, yyyy"
+                    className="w-full border rounded p-2"
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Set Deadline</button>
+                  <button onClick={() => setIsDeadlineModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
                 </div>
               </form>
             </div>
