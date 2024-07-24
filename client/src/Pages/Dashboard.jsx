@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faFolder, faTasks, faChevronDown, faChevronUp, faBars } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import Sidebar from './Sidebar';
 import Sidebar from './Sidebar';
 
 function Dashboard() {
@@ -77,6 +78,10 @@ function Dashboard() {
         console.error('Error deleting project:', error);
       });
   };
+  
+  const handleInvite = () => {
+    setIsInviteModalOpen(true);
+  };
 
   const handleInviteSubmit = async () => {
     try {
@@ -128,11 +133,9 @@ function Dashboard() {
 
   const onDragEnd = (result) => {
     const { destination, source } = result;
-
     if (!destination) {
       return;
     }
-
     const newProjects = Array.from(projects);
     const [movedProject] = newProjects.splice(source.index, 1);
     newProjects.splice(destination.index, 0, movedProject);

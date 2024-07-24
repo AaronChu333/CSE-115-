@@ -355,9 +355,7 @@ app.put('/users/:userId/project-order', async (req, res) => {
     try {
       const { userId } = req.params;
       const { projectOrder } = req.body;
-      
       await User.findByIdAndUpdate(userId, { projectOrder });
-      
       res.status(200).send({ message: 'Project order updated successfully' });
     } catch (error) {
       console.error('Error updating project order:', error);
@@ -403,28 +401,19 @@ app.post('/tasks/:taskId/notes', async (req, res) => {
     }
 });
 
-// Delete a note
-app.delete('/notes/:noteId', async (req, res) => {
+// Get notes for a task
+app.get('/tasks/:taskId/notes', async (req, res) => {
     try {
-        const { noteId } = req.params;
-        const deletedNote = await Note.findByIdAndDelete(noteId);
-        if (!deletedNote) {
-            return res.status(404).send({ error: 'Note not found' });
+        const { taskId } = req.params;
+        const task = await Task.findById(taskId).populate('notes');
+        if (!task) {
+            return res.status(404).send({ error: 'Task not found' });
         }
-
-        // Remove the note reference from the associated task
-        await Task.findByIdAndUpdate(
-            deletedNote.taskId,
-            { $pull: { notes: noteId } },
-            { new: true, useFindAndModify: false }
-        );
-
-        res.status(200).send({ message: 'Note deleted successfully' });
+        res.status(200).send(task.notes);
     } catch (err) {
-        console.error(err);
-        res.status(500).send({ error: 'Error deleting note' });
+        console.error('Error fetching notes:', err);
+        res.status(500).send({ error: 'Error fetching notes' });
     }
 });
-
 
 export default app;
