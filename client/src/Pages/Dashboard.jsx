@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faFolder, faTasks, faChevronDown, faChevronUp, faBars } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Sidebar from './Sidebar';
@@ -77,10 +77,6 @@ function Dashboard() {
         console.error('Error deleting project:', error);
       });
   };
-  
-  const handleInvite = () => {
-    setIsInviteModalOpen(true);
-  };
 
   const handleInviteSubmit = async () => {
     try {
@@ -132,9 +128,11 @@ function Dashboard() {
 
   const onDragEnd = (result) => {
     const { destination, source } = result;
+
     if (!destination) {
       return;
     }
+
     const newProjects = Array.from(projects);
     const [movedProject] = newProjects.splice(source.index, 1);
     newProjects.splice(destination.index, 0, movedProject);
@@ -246,24 +244,6 @@ function Dashboard() {
                   <button onClick={() => setIsModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
                 </div>
               </form>
-            </div>
-          </div>
-        )}
-        {isInviteModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
-              <h3 className="text-xl font-semibold mb-4">Invite Collaborator</h3>
-              <input
-                type="email"
-                className="w-full border rounded p-2 mb-4"
-                placeholder="Enter collaborator's email"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-              />
-              <div className="flex justify-end">
-                <button onClick={handleInviteSubmit} className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Send Invite</button>
-                <button onClick={() => setIsInviteModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
-              </div>
             </div>
           </div>
         )}
