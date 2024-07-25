@@ -19,7 +19,7 @@ adapts to both individual and team workflows, based on the specific needs of use
 - Create, update, delete projects and tasks
 - Assign deadlines to tasks
 - Arrange tasks in terms of priority
-- Invite and manage collaborators for projects
+- Invite collaborators for projects
 - Add notes to tasks
 - Responsive UI
 
