@@ -1,26 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { useNavigate } from 'react-router-dom';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import Sidebar from './Sidebar';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import Sidebar from "./Sidebar";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 function Dashboard() {
   const [projects, setProjects] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDeadline, setNewProjectDeadline] = useState(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteEmail, setInviteEmail] = useState("");
   const [isInvitationsModalOpen, setIsInvitationsModalOpen] = useState(false);
   const [invitations, setInvitations] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedUserId = localStorage.getItem('userId')
+    const storedUserId = localStorage.getItem("userId");
     fetchProjects(storedUserId);
     const interval = setInterval(() => {
       fetchInvitations(storedUserId);
@@ -30,13 +30,12 @@ function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-
   const fetchProjects = async (userId) => {
     try {
       const response = await axios.get(`/api/projects/${userId}`);
       setProjects(response.data);
     } catch (error) {
-      console.error('Error fetching projects:', error);
+      console.error("Error fetching projects:", error);
     }
   };
 
@@ -44,32 +43,38 @@ function Dashboard() {
     e.preventDefault();
     if (!newProjectName || !newProjectDeadline) return;
 
-    const userId = localStorage.getItem('userId');
+    const userId = localStorage.getItem("userId");
     if (!userId) {
-      console.error('No userId found in localStorage');
+      console.error("No userId found in localStorage");
       return;
     }
 
-    axios.post('/api/projects', { userId, name: newProjectName, deadline: newProjectDeadline })
-      .then(response => {
+    axios
+      .post("/api/projects", {
+        userId,
+        name: newProjectName,
+        deadline: newProjectDeadline,
+      })
+      .then((response) => {
         setProjects([...projects, response.data]);
-        setNewProjectName('');
+        setNewProjectName("");
         setNewProjectDeadline(null);
         setIsModalOpen(false);
       })
-      .catch(error => {
-        console.error('Error creating project:', error);
+      .catch((error) => {
+        console.error("Error creating project:", error);
       });
   };
 
   const deleteProject = (e, id) => {
     e.stopPropagation();
-    axios.delete(`/api/projects/${id}`)
+    axios
+      .delete(`/api/projects/${id}`)
       .then(() => {
-        setProjects(projects.filter(project => project._id !== id));
+        setProjects(projects.filter((project) => project._id !== id));
       })
-      .catch(error => {
-        console.error('Error deleting project:', error);
+      .catch((error) => {
+        console.error("Error deleting project:", error);
       });
   };
 
@@ -77,38 +82,38 @@ function Dashboard() {
     try {
       const response = await axios.get(`/api/invitations/requests/${userId}`);
       setInvitations(response.data);
-      //console.log('invitations: ', response.data)
     } catch (error) {
-      console.error('Error fetching invitations:', error);
+      console.error("Error fetching invitations:", error);
     }
   };
 
   const handleAcceptInvitation = async (invitationId) => {
     try {
       await axios.post(`/api/invitations/${invitationId}/accept`);
-      fetchInvitations(localStorage.getItem('userId'));
+      fetchInvitations(localStorage.getItem("userId"));
     } catch (error) {
-      console.error('Error accepting invitation:', error);
+      console.error("Error accepting invitation:", error);
     }
   };
 
   const handleRejectInvitation = async (invitationId) => {
     try {
       await axios.post(`/api/invitations/${invitationId}/decline`);
-      fetchInvitations(localStorage.getItem('userId'));
+      fetchInvitations(localStorage.getItem("userId"));
     } catch (error) {
-      console.error('Error rejecting invitation:', error);
+      console.error("Error rejecting invitation:", error);
     }
   };
 
   const handleLogout = () => {
-    axios.get('/api/logout')
+    axios
+      .get("/api/logout")
       .then(() => {
-        localStorage.removeItem('userId');
-        navigate('/login');
+        localStorage.removeItem("userId");
+        navigate("/login");
       })
-      .catch(error => {
-        console.error('Error logging out:', error);
+      .catch((error) => {
+        console.error("Error logging out:", error);
       });
   };
 
@@ -128,14 +133,15 @@ function Dashboard() {
   };
 
   const updateProjectOrder = (newProjects) => {
-    const userId = localStorage.getItem('userId');
-    const projectOrder = newProjects.map(project => project._id);
-    axios.put(`/users/${userId}/project-order`, { projectOrder })
-      .then(response => {
-        console.log('Project order updated successfully');
+    const userId = localStorage.getItem("userId");
+    const projectOrder = newProjects.map((project) => project._id);
+    axios
+      .put(`/users/${userId}/project-order`, { projectOrder })
+      .then((response) => {
+        console.log("Project order updated successfully");
       })
-      .catch(error => {
-        console.error('Error updating project order:', error);
+      .catch((error) => {
+        console.error("Error updating project order:", error);
       });
   };
 
@@ -145,7 +151,12 @@ function Dashboard() {
       <div className="flex-1 bg-gray-100 min-h-screen p-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Projects</h1>
-          <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white px-4 py-2 rounded"
+          >
+            Logout
+          </button>
         </div>
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="projects" direction="horizontal">
@@ -156,28 +167,40 @@ function Dashboard() {
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12"
               >
                 {projects.map((project, index) => (
-                  <Draggable key={project._id} draggableId={project._id} index={index}>
+                  <Draggable
+                    key={project._id}
+                    draggableId={project._id}
+                    index={index}
+                  >
                     {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         className={`bg-white p-4 rounded-lg shadow-md cursor-pointer hover:bg-gray-200 ${
-                          snapshot.isDragging ? 'dragging' : ''
+                          snapshot.isDragging ? "dragging" : ""
                         }`}
                         style={{
-                          height: '250px',
-                          width: '250px',
+                          height: "250px",
+                          width: "250px",
                           ...provided.draggableProps.style,
                         }}
-                        onClick={() => navigate(`/projects/${project._id}`, { state: { projectName: project.name } })}
+                        onClick={() =>
+                          navigate(`/projects/${project._id}`, {
+                            state: { projectName: project.name },
+                          })
+                        }
                       >
                         <div className="flex justify-between items-center">
                           <div>
-                            <h2 className="text-lg font-semibold">{project.name}</h2>
+                            <h2 className="text-lg font-semibold">
+                              {project.name}
+                            </h2>
                             {project.deadline && (
                               <p className="text-sm text-gray-600">
-                                {new Date(project.deadline).toLocaleDateString()}
+                                {new Date(
+                                  project.deadline
+                                ).toLocaleDateString()}
                               </p>
                             )}
                           </div>
@@ -196,12 +219,15 @@ function Dashboard() {
                 <div
                   className="bg-gray-200 p-4 rounded-lg shadow-md flex items-center justify-center cursor-pointer hover:bg-gray-300"
                   style={{
-                    height: '250px',
-                    width: '250px',
+                    height: "250px",
+                    width: "250px",
                   }}
                   onClick={() => setIsModalOpen(true)}
                 >
-                  <FontAwesomeIcon icon={faPlus} className="text-3xl text-gray-500" />
+                  <FontAwesomeIcon
+                    icon={faPlus}
+                    className="text-3xl text-gray-500"
+                  />
                 </div>
               </div>
             )}
@@ -213,7 +239,9 @@ function Dashboard() {
               <h3 className="text-xl font-semibold mb-4">Create Project</h3>
               <form onSubmit={handleCreateProject}>
                 <div className="mb-3">
-                  <label htmlFor="projectName" className="block mb-1">Project Name</label>
+                  <label htmlFor="projectName" className="block mb-1">
+                    Project Name
+                  </label>
                   <input
                     type="text"
                     id="projectName"
@@ -223,7 +251,9 @@ function Dashboard() {
                   />
                 </div>
                 <div className="mb-3">
-                  <label htmlFor="projectDeadline" className="block mb-1">Project Deadline</label>
+                  <label htmlFor="projectDeadline" className="block mb-1">
+                    Project Deadline
+                  </label>
                   <DatePicker
                     selected={newProjectDeadline}
                     onChange={(date) => setNewProjectDeadline(date)}
@@ -233,8 +263,18 @@ function Dashboard() {
                   />
                 </div>
                 <div className="flex justify-end">
-                  <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Create</button>
-                  <button onClick={() => setIsModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                  <button
+                    type="submit"
+                    className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
+                  >
+                    Create
+                  </button>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="bg-gray-500 text-white px-4 py-2 rounded"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </form>
             </div>
@@ -243,15 +283,24 @@ function Dashboard() {
         {isInvitationsModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
-              <h3 className="text-xl font-semibold mb-4">Project Invitations</h3>
+              <h3 className="text-xl font-semibold mb-4">
+                Project Invitations
+              </h3>
               <div className="space-y-4">
                 {invitations.map((invitation) => (
-                  <div key={invitation._id} className="bg-gray-100 p-4 rounded-lg">
+                  <div
+                    key={invitation._id}
+                    className="bg-gray-100 p-4 rounded-lg"
+                  >
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold">{invitation.project.name}</span>
+                      <span className="font-semibold">
+                        {invitation.project.name}
+                      </span>
                       <div>
-                        <span className = "flex font-semibold">Sent By User: {invitation.sender.username}</span>
-                          <p className = "flex">Email: {invitation.sender.email}</p>
+                        <span className="flex font-semibold">
+                          Sent By User: {invitation.sender.username}
+                        </span>
+                        <p className="flex">Email: {invitation.sender.email}</p>
                         <button
                           onClick={() => handleAcceptInvitation(invitation._id)}
                           className="bg-green-500 text-white px-4 py-2 rounded mr-2"
@@ -270,7 +319,10 @@ function Dashboard() {
                 ))}
               </div>
               <div className="flex justify-end mt-4">
-                <button onClick={() => setIsInvitationsModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">
+                <button
+                  onClick={() => setIsInvitationsModalOpen(false)}
+                  className="bg-gray-500 text-white px-4 py-2 rounded"
+                >
                   Close
                 </button>
               </div>

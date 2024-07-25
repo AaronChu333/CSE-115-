@@ -1,42 +1,50 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faChevronDown, faChevronUp, faBars, faUserPlus, faEdit, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import Sidebar from './Sidebar';
-import { useParams, useLocation } from 'react-router-dom';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faTrash,
+  faChevronDown,
+  faChevronUp,
+  faBars,
+  faUserPlus,
+  faEdit,
+  faCalendarAlt,
+} from "@fortawesome/free-solid-svg-icons";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import Sidebar from "./Sidebar";
+import { useParams, useLocation } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 function ProjectTasks() {
   const { projectId } = useParams();
   const location = useLocation();
   const { projectName } = location.state || {};
   const [tasks, setTasks] = useState([]);
-  const [newTaskName, setNewTaskName] = useState('');
+  const [newTaskName, setNewTaskName] = useState("");
   const [taskNotes, setTaskNotes] = useState({});
   const [expandedTasks, setExpandedTasks] = useState({});
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteEmail, setInviteEmail] = useState("");
   const [isInvitationsModalOpen, setIsInvitationsModalOpen] = useState(false);
   const [invitations, setInvitations] = useState([]);
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [currentTaskId, setCurrentTaskId] = useState(null);
-  const [noteContent, setNoteContent] = useState('');
+  const [noteContent, setNoteContent] = useState("");
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [renameTaskId, setRenameTaskId] = useState(null);
-  const [renameTaskName, setRenameTaskName] = useState('');
+  const [renameTaskName, setRenameTaskName] = useState("");
   const [isDeadlineModalOpen, setIsDeadlineModalOpen] = useState(false);
   const [taskDeadline, setTaskDeadline] = useState(null);
   const [deadlineTaskId, setDeadlineTaskId] = useState(null);
 
   useEffect(() => {
     fetchTasks(projectId);
-    const storedUserId = localStorage.getItem('userId');
+    const storedUserId = localStorage.getItem("userId");
     if (storedUserId) {
       fetchInvitations(storedUserId);
     } else {
-      console.error('No userId found in localStorage');
+      console.error("No userId found in localStorage");
     }
   }, [projectId]);
 
@@ -45,12 +53,12 @@ function ProjectTasks() {
       const response = await axios.get(`/api/tasks/${projectId}`);
       setTasks(response.data);
       const notes = {};
-      response.data.forEach(task => {
+      response.data.forEach((task) => {
         notes[task._id] = task.notes;
       });
       setTaskNotes(notes);
     } catch (error) {
-      console.error('Error fetching tasks:', error);
+      console.error("Error fetching tasks:", error);
     }
   };
 
@@ -59,7 +67,7 @@ function ProjectTasks() {
       const response = await axios.get(`/api/invitations/${userId}`);
       setInvitations(response.data);
     } catch (error) {
-      console.error('Error fetching invitations:', error);
+      console.error("Error fetching invitations:", error);
     }
   };
 
@@ -67,54 +75,60 @@ function ProjectTasks() {
     e.preventDefault();
     if (!newTaskName) return;
 
-    const userId = localStorage.getItem('userId');
+    const userId = localStorage.getItem("userId");
     if (!userId) {
-      console.error('No userId found in localStorage');
+      console.error("No userId found in localStorage");
       return;
     }
 
-    axios.post('/api/tasks', {
-      projectId,
-      name: newTaskName,
-      userId
-    })
-      .then(response => {
-        setTasks([...tasks, response.data]);
-        setNewTaskName('');
+    axios
+      .post("/api/tasks", {
+        projectId,
+        name: newTaskName,
+        userId,
       })
-      .catch(error => {
-        console.error('Error creating task:', error.response ? error.response.data : error.message);
+      .then((response) => {
+        setTasks([...tasks, response.data]);
+        setNewTaskName("");
+      })
+      .catch((error) => {
+        console.error(
+          "Error creating task:",
+          error.response ? error.response.data : error.message
+        );
       });
   };
 
   const deleteTask = (id) => {
-    axios.delete(`/api/tasks/${id}`)
+    axios
+      .delete(`/api/tasks/${id}`)
       .then(() => {
-        setTasks(tasks.filter(task => task._id !== id));
+        setTasks(tasks.filter((task) => task._id !== id));
       })
-      .catch(error => {
-        console.error('Error deleting task:', error);
+      .catch((error) => {
+        console.error("Error deleting task:", error);
       });
   };
 
   const toggleTaskCompletion = (taskId) => {
-    axios.put(`/api/tasks/${taskId}/toggle`)
-      .then(response => {
-        setTasks(tasks.map(task => 
-          task._id === taskId ? response.data : task
-        ));
+    axios
+      .put(`/api/tasks/${taskId}/toggle`)
+      .then((response) => {
+        setTasks(
+          tasks.map((task) => (task._id === taskId ? response.data : task))
+        );
       })
-      .catch(error => {
-        console.error('Error toggling task completion:', error);
+      .catch((error) => {
+        console.error("Error toggling task completion:", error);
       });
   };
 
   const toggleTaskNotes = (e, taskId) => {
     e.preventDefault();
     e.stopPropagation();
-    setExpandedTasks(prev => ({
+    setExpandedTasks((prev) => ({
       ...prev,
-      [taskId]: !prev[taskId]
+      [taskId]: !prev[taskId],
     }));
     if (!expandedTasks[taskId]) {
       fetchTaskNotes(taskId);
@@ -128,43 +142,45 @@ function ProjectTasks() {
 
   const addNoteToTask = () => {
     if (noteContent) {
-      axios.post(`/api/tasks/${currentTaskId}/notes`, { content: noteContent })
-        .then(response => {
-          setTaskNotes(prev => ({
+      axios
+        .post(`/api/tasks/${currentTaskId}/notes`, { content: noteContent })
+        .then((response) => {
+          setTaskNotes((prev) => ({
             ...prev,
-            [currentTaskId]: [...(prev[currentTaskId] || []), response.data]
+            [currentTaskId]: [...(prev[currentTaskId] || []), response.data],
           }));
-          setNoteContent('');
+          setNoteContent("");
           setIsNoteModalOpen(false);
         })
-        .catch(error => {
-          console.error('Error adding note:', error);
+        .catch((error) => {
+          console.error("Error adding note:", error);
         });
     }
   };
 
   const deleteNote = (noteId, taskId) => {
-    axios.delete(`/api/notes/${noteId}`)
+    axios
+      .delete(`/api/notes/${noteId}`)
       .then(() => {
-        setTaskNotes(prev => ({
+        setTaskNotes((prev) => ({
           ...prev,
-          [taskId]: prev[taskId].filter(note => note._id !== noteId)
+          [taskId]: prev[taskId].filter((note) => note._id !== noteId),
         }));
       })
-      .catch(error => {
-        console.error('Error deleting note:', error);
+      .catch((error) => {
+        console.error("Error deleting note:", error);
       });
   };
 
   const fetchTaskNotes = async (taskId) => {
     try {
       const response = await axios.get(`/api/tasks/${taskId}/notes`);
-      setTaskNotes(prev => ({
+      setTaskNotes((prev) => ({
         ...prev,
-        [taskId]: response.data
+        [taskId]: response.data,
       }));
     } catch (error) {
-      console.error('Error fetching notes:', error);
+      console.error("Error fetching notes:", error);
     }
   };
 
@@ -184,13 +200,14 @@ function ProjectTasks() {
   };
 
   const updateTaskOrder = (newTasks) => {
-    const taskOrder = newTasks.map(task => task._id);
-    axios.put(`/api/projects/${projectId}/task-order`, { taskOrder })
-      .then(response => {
-        console.log('Task order updated successfully');
+    const taskOrder = newTasks.map((task) => task._id);
+    axios
+      .put(`/api/projects/${projectId}/task-order`, { taskOrder })
+      .then((response) => {
+        console.log("Task order updated successfully");
       })
-      .catch(error => {
-        console.error('Error updating task order:', error);
+      .catch((error) => {
+        console.error("Error updating task order:", error);
       });
   };
 
@@ -201,39 +218,42 @@ function ProjectTasks() {
   const handleInviteSubmit = async (e) => {
     e.preventDefault();
     try {
-      const userId = localStorage.getItem('userId');
+      const userId = localStorage.getItem("userId");
       if (!userId) {
-        console.error('No userId found in localStorage');
+        console.error("No userId found in localStorage");
         return;
       }
 
-      await axios.post('/api/invitations', {
+      await axios.post("/api/invitations", {
         sender: userId,
         recipientEmail: inviteEmail,
-        projectId: projectId
+        projectId: projectId,
       });
-      setInviteEmail('');
+      setInviteEmail("");
       setIsInviteModalOpen(false);
     } catch (error) {
-      console.error('Error sending invite:', error.response ? error.response.data : error.message);
+      console.error(
+        "Error sending invite:",
+        error.response ? error.response.data : error.message
+      );
     }
   };
 
   const handleAcceptInvitation = async (invitationId) => {
     try {
       await axios.post(`/api/invitations/${invitationId}/accept`);
-      fetchInvitations(localStorage.getItem('userId'));
+      fetchInvitations(localStorage.getItem("userId"));
     } catch (error) {
-      console.error('Error accepting invitation:', error);
+      console.error("Error accepting invitation:", error);
     }
   };
 
   const handleRejectInvitation = async (invitationId) => {
     try {
       await axios.post(`/api/invitations/${invitationId}/decline`);
-      fetchInvitations(localStorage.getItem('userId'));
+      fetchInvitations(localStorage.getItem("userId"));
     } catch (error) {
-      console.error('Error rejecting invitation:', error);
+      console.error("Error rejecting invitation:", error);
     }
   };
 
@@ -247,12 +267,14 @@ function ProjectTasks() {
     e.preventDefault();
     try {
       await axios.put(`/api/tasks/${renameTaskId}`, { name: renameTaskName });
-      setTasks(tasks.map(task => 
-        task._id === renameTaskId ? { ...task, name: renameTaskName } : task
-      ));
+      setTasks(
+        tasks.map((task) =>
+          task._id === renameTaskId ? { ...task, name: renameTaskName } : task
+        )
+      );
       setIsRenameModalOpen(false);
     } catch (error) {
-      console.error('Error renaming task:', error);
+      console.error("Error renaming task:", error);
     }
   };
 
@@ -262,15 +284,21 @@ function ProjectTasks() {
   };
 
   const handleDeadlineSubmit = async (e) => {
-    e.preventDefault
+    e.preventDefault;
     try {
-      await axios.put(`/api/tasks/${deadlineTaskId}/deadline`, { deadline: taskDeadline });
-      setTasks(tasks.map(task =>
-        task._id === deadlineTaskId ? { ...task, deadline: taskDeadline } : task
-      ));
+      await axios.put(`/api/tasks/${deadlineTaskId}/deadline`, {
+        deadline: taskDeadline,
+      });
+      setTasks(
+        tasks.map((task) =>
+          task._id === deadlineTaskId
+            ? { ...task, deadline: taskDeadline }
+            : task
+        )
+      );
       setIsDeadlineModalOpen(false);
     } catch (error) {
-      console.error('Error setting deadline:', error);
+      console.error("Error setting deadline:", error);
     }
   };
 
@@ -290,7 +318,9 @@ function ProjectTasks() {
         </div>
         <form onSubmit={handleCreateTask} className="mb-4">
           <div className="mb-3 w-1/4">
-            <label htmlFor="taskName" className="block mb-1">Task Name</label>
+            <label htmlFor="taskName" className="block mb-1">
+              Task Name
+            </label>
             <input
               type="text"
               id="taskName"
@@ -299,7 +329,12 @@ function ProjectTasks() {
               onChange={(e) => setNewTaskName(e.target.value)}
             />
           </div>
-          <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded">Create Task</button>
+          <button
+            type="submit"
+            className="bg-green-500 text-white px-4 py-2 rounded"
+          >
+            Create Task
+          </button>
         </form>
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="tasks">
@@ -310,7 +345,11 @@ function ProjectTasks() {
                 className="space-y-2 w-1/2"
               >
                 {tasks.map((task, index) => (
-                  <Draggable key={task._id} draggableId={task._id} index={index}>
+                  <Draggable
+                    key={task._id}
+                    draggableId={task._id}
+                    index={index}
+                  >
                     {(provided) => (
                       <li
                         ref={provided.innerRef}
@@ -330,12 +369,19 @@ function ProjectTasks() {
                               className="mr-2"
                             />
                             <div>
-                              <span className={task.completed ? 'line-through text-gray-500' : ''}>
+                              <span
+                                className={
+                                  task.completed
+                                    ? "line-through text-gray-500"
+                                    : ""
+                                }
+                              >
                                 {task.name}
                               </span>
                               {task.deadline && (
                                 <div className="text-sm text-gray-500">
-                                  Due: {new Date(task.deadline).toLocaleDateString()}
+                                  Due:{" "}
+                                  {new Date(task.deadline).toLocaleDateString()}
                                 </div>
                               )}
                             </div>
@@ -358,7 +404,9 @@ function ProjectTasks() {
                               )}
                             </button>
                             <button
-                              onClick={() => openRenameModal(task._id, task.name)}
+                              onClick={() =>
+                                openRenameModal(task._id, task.name)
+                              }
                               className="bg-yellow-500 text-white px-2 py-1 rounded mr-2 text-xs"
                             >
                               <FontAwesomeIcon icon={faEdit} />
@@ -380,13 +428,19 @@ function ProjectTasks() {
                         {expandedTasks[task._id] && (
                           <div className="mt-2 pl-6 bg-white p-2 rounded shadow">
                             <h4 className="font-semibold">Notes:</h4>
-                            {taskNotes[task._id] && taskNotes[task._id].length > 0 ? (
+                            {taskNotes[task._id] &&
+                            taskNotes[task._id].length > 0 ? (
                               <ul className="list-disc pl-4">
                                 {taskNotes[task._id].map((note, index) => (
-                                  <li key={note._id} className="text-sm text-gray-600 flex justify-between">
+                                  <li
+                                    key={note._id}
+                                    className="text-sm text-gray-600 flex justify-between"
+                                  >
                                     {note.content}
                                     <button
-                                      onClick={() => deleteNote(note._id, task._id)}
+                                      onClick={() =>
+                                        deleteNote(note._id, task._id)
+                                      }
                                       className="text-red-500 font-bold px-2 py-1 rounded hover:bg-red-100"
                                     >
                                       <FontAwesomeIcon icon={faTrash} />
@@ -395,7 +449,9 @@ function ProjectTasks() {
                                 ))}
                               </ul>
                             ) : (
-                              <p className="text-sm text-gray-500">No notes yet.</p>
+                              <p className="text-sm text-gray-500">
+                                No notes yet.
+                              </p>
                             )}
                           </div>
                         )}
@@ -411,12 +467,19 @@ function ProjectTasks() {
         {isInvitationsModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
-              <h3 className="text-xl font-semibold mb-4">Project Invitations</h3>
+              <h3 className="text-xl font-semibold mb-4">
+                Project Invitations
+              </h3>
               <div className="space-y-4">
                 {invitations.map((invitation) => (
-                  <div key={invitation._id} className="bg-gray-100 p-4 rounded-lg">
+                  <div
+                    key={invitation._id}
+                    className="bg-gray-100 p-4 rounded-lg"
+                  >
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold">{invitation.project.name}</span>
+                      <span className="font-semibold">
+                        {invitation.project.name}
+                      </span>
                       <div>
                         <button
                           onClick={() => handleAcceptInvitation(invitation._id)}
@@ -436,7 +499,10 @@ function ProjectTasks() {
                 ))}
               </div>
               <div className="flex justify-end mt-4">
-                <button onClick={() => setIsInvitationsModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">
+                <button
+                  onClick={() => setIsInvitationsModalOpen(false)}
+                  className="bg-gray-500 text-white px-4 py-2 rounded"
+                >
                   Close
                 </button>
               </div>
@@ -446,10 +512,14 @@ function ProjectTasks() {
         {isInviteModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
-              <h3 className="text-xl font-semibold mb-4">Invite Collaborator</h3>
+              <h3 className="text-xl font-semibold mb-4">
+                Invite Collaborator
+              </h3>
               <form onSubmit={handleInviteSubmit}>
                 <div className="mb-3">
-                  <label htmlFor="inviteEmail" className="block mb-1">Email</label>
+                  <label htmlFor="inviteEmail" className="block mb-1">
+                    Email
+                  </label>
                   <input
                     type="email"
                     id="inviteEmail"
@@ -459,8 +529,18 @@ function ProjectTasks() {
                   />
                 </div>
                 <div className="flex justify-end">
-                  <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Send Invite</button>
-                  <button onClick={() => setIsInviteModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                  <button
+                    type="submit"
+                    className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
+                  >
+                    Send Invite
+                  </button>
+                  <button
+                    onClick={() => setIsInviteModalOpen(false)}
+                    className="bg-gray-500 text-white px-4 py-2 rounded"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </form>
             </div>
@@ -470,9 +550,16 @@ function ProjectTasks() {
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-8 rounded-lg shadow-lg w-1/3">
               <h3 className="text-xl font-semibold mb-4">Add Note</h3>
-              <form onSubmit={(e) => { e.preventDefault(); addNoteToTask(); }}>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  addNoteToTask();
+                }}
+              >
                 <div className="mb-3">
-                  <label htmlFor="noteContent" className="block mb-1">Note</label>
+                  <label htmlFor="noteContent" className="block mb-1">
+                    Note
+                  </label>
                   <textarea
                     id="noteContent"
                     className="w-full border rounded p-2"
@@ -481,8 +568,18 @@ function ProjectTasks() {
                   ></textarea>
                 </div>
                 <div className="flex justify-end">
-                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Add Note</button>
-                  <button onClick={() => setIsNoteModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                  <button
+                    type="submit"
+                    className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
+                  >
+                    Add Note
+                  </button>
+                  <button
+                    onClick={() => setIsNoteModalOpen(false)}
+                    className="bg-gray-500 text-white px-4 py-2 rounded"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </form>
             </div>
@@ -494,7 +591,9 @@ function ProjectTasks() {
               <h3 className="text-xl font-semibold mb-4">Rename Task</h3>
               <form onSubmit={handleRenameSubmit}>
                 <div className="mb-3">
-                  <label htmlFor="renameTaskName" className="block mb-1">New Task Name</label>
+                  <label htmlFor="renameTaskName" className="block mb-1">
+                    New Task Name
+                  </label>
                   <input
                     type="text"
                     id="renameTaskName"
@@ -504,8 +603,18 @@ function ProjectTasks() {
                   />
                 </div>
                 <div className="flex justify-end">
-                  <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Rename Task</button>
-                  <button onClick={() => setIsRenameModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                  <button
+                    type="submit"
+                    className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
+                  >
+                    Rename Task
+                  </button>
+                  <button
+                    onClick={() => setIsRenameModalOpen(false)}
+                    className="bg-gray-500 text-white px-4 py-2 rounded"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </form>
             </div>
@@ -517,7 +626,9 @@ function ProjectTasks() {
               <h3 className="text-xl font-semibold mb-4">Set Deadline</h3>
               <form onSubmit={handleDeadlineSubmit}>
                 <div className="mb-3">
-                  <label htmlFor="taskDeadline" className="block mb-1">Deadline</label>
+                  <label htmlFor="taskDeadline" className="block mb-1">
+                    Deadline
+                  </label>
                   <DatePicker
                     selected={taskDeadline}
                     onChange={(date) => setTaskDeadline(date)}
@@ -526,8 +637,18 @@ function ProjectTasks() {
                   />
                 </div>
                 <div className="flex justify-end">
-                  <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Set Deadline</button>
-                  <button onClick={() => setIsDeadlineModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                  <button
+                    type="submit"
+                    className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
+                  >
+                    Set Deadline
+                  </button>
+                  <button
+                    onClick={() => setIsDeadlineModalOpen(false)}
+                    className="bg-gray-500 text-white px-4 py-2 rounded"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </form>
             </div>

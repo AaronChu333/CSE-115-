@@ -1,7 +1,12 @@
-import React, { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronRight, faChevronLeft, faFolder, faEnvelope } from '@fortawesome/free-solid-svg-icons';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faChevronRight,
+  faChevronLeft,
+  faFolder,
+  faEnvelope,
+} from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
 
 function Sidebar({ setIsInvitationsModalOpen }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -12,7 +17,11 @@ function Sidebar({ setIsInvitationsModalOpen }) {
   };
 
   return (
-    <div className={`sidebar bg-gray-800 text-white ${isExpanded ? 'w-64' : 'w-16'} transition-all duration-200`}>
+    <div
+      className={`sidebar bg-gray-800 text-white ${
+        isExpanded ? "w-64" : "w-16"
+      } transition-all duration-200`}
+    >
       <div className="flex justify-between items-center p-4">
         <button onClick={handleToggle}>
           <FontAwesomeIcon icon={isExpanded ? faChevronLeft : faChevronRight} />
@@ -22,7 +31,7 @@ function Sidebar({ setIsInvitationsModalOpen }) {
       <div className="mt-4">
         <button
           className="flex items-center w-full p-4 hover:bg-gray-700"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate("/dashboard")}
         >
           <FontAwesomeIcon icon={faFolder} className="mr-2" />
           {isExpanded && <span>Dashboard</span>}
