@@ -67,18 +67,24 @@ app.get('/', (req, res) => {
 //Registering
 app.post('/register', async (req, res, next) => {
     try {
-        const { username, email, password } = req.body; 
+        const { username, email, password } = req.body;
+
+        // Check if the email already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).send({ message: 'Email already in use. Please try again.' });
+        }
+
         const hashedPassword = bcryptjs.hashSync(password, 10);
-        const newUser = new User({ username, email, password: hashedPassword }); 
+        const newUser = new User({ username, email, password: hashedPassword });
         await newUser.save();
         res.status(201).send({ message: 'User registered successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).send({ error: 'Error registering user' });
-        next(err);
+        next(error);
     }
 });
-
 
 //Logging in
 app.post('/login', async (req, res) => {
@@ -444,9 +450,10 @@ app.delete('/notes/:noteId', async (req, res) => {
     }
 });
 
+
 // Send an invitation
 app.post('/invitations', async (req, res, next) => {
-    const { requesterID, recipientEmail, projectId } = req.body;
+    const { sender, recipientEmail, projectId } = req.body;
 
     try {
         const recipient = await User.findOne({ email: recipientEmail });
@@ -455,7 +462,7 @@ app.post('/invitations', async (req, res, next) => {
         }
 
         const invitation = new Invitation({
-            sender: requesterID,
+            sender: sender,
             recipient: recipient._id,
             project: projectId,
             status: 'Pending',

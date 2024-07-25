@@ -230,7 +230,7 @@ function ProjectTasks() {
 
   const handleRejectInvitation = async (invitationId) => {
     try {
-      await axios.post(`/api/invitations/${invitationId}/reject`);
+      await axios.post(`/api/invitations/${invitationId}/decline`);
       fetchInvitations(localStorage.getItem('userId'));
     } catch (error) {
       console.error('Error rejecting invitation:', error);

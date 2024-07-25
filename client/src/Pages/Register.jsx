@@ -6,6 +6,7 @@ function Signup() {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const navigate = useNavigate();
     const [message, setMessage] = useState('');
     const [messageType, setMessageType] = useState('');
@@ -15,9 +16,15 @@ function Signup() {
         setMessage('');
         setMessageType('');
 
-        if (!username || !email || !password) {
+        if (!username || !email || !password || !confirmPassword) {
             setMessage('All input fields are required');
-            setMessageType('Error');
+            setMessageType('error');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setMessage('Passwords do not match');
+            setMessageType('error');
             return;
         }
 
@@ -51,6 +58,11 @@ function Signup() {
             <h1 className="text-white text-5xl font-bold mb-8">Welcome to Project Manager</h1>
             <div className="bg-white bg-opacity-20 p-8 rounded-lg shadow-lg max-w-sm w-full space-y-8">
                 <h2 className="text-center text-3xl font-bold text-white">Register</h2>
+                {message && (
+                    <div className={`text-center text-sm ${messageType === 'error' ? 'text-red-500' : 'text-green-500'}`}>
+                        {message}
+                    </div>
+                )}
                 <form onSubmit={handleSubmit}>
                     <div className="rounded-md shadow-sm -space-y-px">
                         <div>
@@ -91,14 +103,19 @@ function Signup() {
                                 placeholder="Password"
                                 onChange={(e) => setPassword(e.target.value)}
                             />
+                        </div>
+                        <div className="mt-3">
+                            <label htmlFor="confirmPassword" className="sr-only">Confirm Password</label>
                             <input
-                            type="password"
-                            placeholder="Confirm Password"
-                            autoComplete="off"
-                            name="confirmPassword"
-                            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                        />
+                                id="confirmPassword"
+                                name="confirmPassword"
+                                type="password"
+                                autoComplete="off"
+                                required
+                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                placeholder="Confirm Password"
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                            />
                         </div>
                     </div>
 
