@@ -31,46 +31,46 @@ adapts to both individual and team workflows, based on the specific needs of use
 - **Styling**: Tailwind CSS
 
 ## Getting Started
-Instructions to get a copy of the project up and running on your local machine for development and testing purposes:
+Instructions to get a local copy on your machine for development and testing purposes:
 
 ### Prerequisites
 - Node.js / npm
 - MongoDB
 
 ### Installation
-1. **Clone the repository**:
+1. **Clone Repository**:
     ```sh
     git clone git@github.com:AaronChu333/CSE-115-.git
     cd task-manager
     ```
 
-2. **Install dependencies for the backend**:
+2. **Install dependencies for the back-end**:
     ```sh
     cd server
     npm install
     ```
 
-3. **Install dependencies for the frontend**:
+3. **Install dependencies for the front-end**:
     ```sh
     cd ../client
     npm install
     ```
 
 ### Configuration
-1. **Backend**: Create a `.env` file in the `server` directory with unique key:
+1. **Back-end**: Create a `.env` file in the `server` directory with unique key:
     ```
     MONGO= 'key'
     PORT=8080
     ```
 
 ### Usage
-1. **Start the back-end server**:
+1. **Launch the back-end server**:
     ```sh
     cd server
     npm run dev
     ```
 
-2. **Start the front-end server**:
+2. **Launch the front-end server**:
     ```sh
     cd client
     npm run dev
@@ -87,14 +87,14 @@ Instructions to get a copy of the project up and running on your local machine f
 
 ### Project Routes
 - **POST /projects**: Create a new project
-- **GET /projects/:userId**: Get all projects for a user
+- **GET /projects/:userId**: Get projects for a user
 - **PUT /projects/:projectId**: Rename a project
 - **DELETE /projects/:projectId**: Delete a project
 - **PUT /projects/:projectId/task-order**: Update task order within a project
 
 ### Task Routes
 - **POST /tasks**: Create a new task
-- **GET /tasks/:projectId**: Get all tasks for a project
+- **GET /tasks/:projectId**: Get tasks for a project
 - **PUT /tasks/:taskId**: Rename a task
 - **PUT /tasks/:taskId/toggle**: Toggle task completion
 - **PUT /tasks/:taskId/deadline**: Set task deadline
@@ -102,7 +102,7 @@ Instructions to get a copy of the project up and running on your local machine f
 
 ### Note Routes
 - **POST /tasks/:taskId/notes**: Add a note to a task
-- **GET /tasks/:taskId/notes**: Get all notes for a task
+- **GET /tasks/:taskId/notes**: Get notes for a task
 - **DELETE /notes/:noteId**: Delete a note
 
 ### Invitation Routes
